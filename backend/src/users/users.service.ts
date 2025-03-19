@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,5 +18,61 @@ export class UsersService {
     return this.userModel.find().exec();
   }
 
-  // Otros métodos para manejar usuarios...
+  async findOne(id: string): Promise<User> {
+    const user = await this.userModel.findById(new Types.ObjectId(id)).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const updatedUser = await this.userModel.findByIdAndUpdate(new Types.ObjectId(id), updateUserDto, { new: true }).exec();
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return updatedUser;
+  }
+
+  async remove(id: string): Promise<User> {
+    const deletedUser = await this.userModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
+    if (!deletedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return deletedUser;
+  }
+
+  async follow(id: string, userId: string): Promise<User> {
+    const user = await this.findOne(id);
+    if (!user.seguidos.includes(new Types.ObjectId(userId))) {
+      user.seguidos.push(new Types.ObjectId(userId));
+      await user.save();
+    }
+    const followedUser = await this.findOne(userId);
+    if (!followedUser.seguidores.includes(new Types.ObjectId(id))) {
+      followedUser.seguidores.push(new Types.ObjectId(id));
+      await followedUser.save();
+    }
+    return user;
+  }
+
+  async unfollow(id: string, userId: string): Promise<User> {
+    const user = await this.findOne(id);
+    user.seguidos = user.seguidos.filter(followedId => !followedId.equals(new Types.ObjectId(userId)));
+    await user.save();
+    const unfollowedUser = await this.findOne(userId);
+    unfollowedUser.seguidores = unfollowedUser.seguidores.filter(followerId => !followerId.equals(new Types.ObjectId(id)));
+    await unfollowedUser.save();
+    return user;
+  }
+
+  async getFollowers(id: string): Promise<User[]> {
+    const user = await this.findOne(id);
+    return this.userModel.find({ _id: { $in: user.seguidores } }).exec();
+  }
+
+  async getFollowing(id: string): Promise<User[]> {
+    const user = await this.findOne(id);
+    return this.userModel.find({ _id: { $in: user.seguidos } }).exec();
+  }
 }

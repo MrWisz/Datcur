@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
+import { PostsModule } from './posts/posts.module';
+import { TokensModule } from './tokens/tokens.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { UsersModule } from './users/users.module';
       },
     }),
     UsersModule,
+    PostsModule,
+    TokensModule,
   ],
   controllers: [AppController],
   providers: [AppService],
