@@ -10,7 +10,7 @@ import { Connection } from 'mongoose';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb+srv://100127067271ucla:gXurwe4tCaLhSdpx@cluster0.xksb0.mongodb.net/datcur?retryWrites=true&w=majority', {
+    MongooseModule.forRoot(process.env.MONGODB_URI || '', {
       connectionFactory: (connection: Connection) => {
         connection.once('open', () => {
           console.log('Connected to MongoDB Atlas');
