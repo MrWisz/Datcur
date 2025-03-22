@@ -9,6 +9,7 @@ export default function App() {
 
   const [fontsLoaded] = useFonts({
     Comic: require("../assets/fonts/ComicNeue-Regular.otf"),
+    ComicBold: require("../assets/fonts/ComicNeue_Bold.otf"),
   });
 
   //mostrar la pantalla por mas tiempo hasta que la fuente este cargada

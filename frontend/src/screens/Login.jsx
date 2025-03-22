@@ -3,33 +3,44 @@ import user from '../../assets/images/login.png'
 import logo from '../../assets/images/loguito1.png';
 import CustomText from "../components/CustomText";
 import Head from '../components/Head';
+import { useNavigation } from "@react-navigation/native";
 
 export default function Login() {
+
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <Head />
-      <Image
-        source={logo}
-        style={{ width: 100, height: 100, marginBottom: "15", marginTop:"5%" }}
-      />
+      <Image source={logo} style={[styles.img, { marginTop: "13%" }]} />
       <CustomText style={{ fontSize: 40 }}>Bienvenido</CustomText>
-      <Image
-        source={user}
-        style={{ with: 300, height: 100, resizeMode: "contain" }}
-      ></Image>
+      <Image source={user} style={styles.img}></Image>
       <TextInput style={styles.input} placeholder="Usuario" />
       <TextInput style={styles.input} placeholder="Contraseña" />
       <CustomText>¿Olvidaste tu contraseña?</CustomText>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button}>
-          <CustomText style={{ fontSize: 15 }}>Iniciar sesion</CustomText>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Register")}
+        >
+          <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
+            Iniciar sesion
+          </CustomText>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.cancelButton]}>
-          <CustomText style={{ fontSize: 16 }}>Cancelar</CustomText>
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+        >
+          <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
+            Cancelar
+          </CustomText>
         </TouchableOpacity>
       </View>
-      <CustomText>¿No tienes cuenta?</CustomText>
-      <CustomText>¡Registrate!</CustomText>
+      <CustomText style={{ fontSize: 18 }}>¿No tienes cuenta?</CustomText>
+      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <CustomText style={{ fontSize: 20, fontFamily: "ComicBold" }}>
+          ¡Registrate!
+        </CustomText>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -42,12 +53,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  /*font: {
-    fontWeight: "bold",
-    fontSize: 40,
-    marginBottom: 20,
-    marginTop: 20,
-  }*/
+  img: {
+    width: 100,
+    height: 100,
+    marginBottom: "3%",
+  },
   input: {
     height: 40,
     width: 220,
@@ -57,9 +67,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   text: {
-    //fontFamily: "Comic",
     fontSize: 40,
-    fontWeight: "bold",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -82,7 +90,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "ComicBold",
     textAlign: "center",
   },
 });
