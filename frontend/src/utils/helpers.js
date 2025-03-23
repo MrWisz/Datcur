@@ -12,6 +12,16 @@ export function validateName(name) {
 }
 
 export function validatePhone(phone) {
-  const re = /^[0-9]{10}$/; // Solo números, exactamente 10 dígitos
+  const re = /^[0-9]{11}$/; // Solo números, exactamente 11 dígitos
   return re.test(phone);
+}
+
+export function validateUser(user) {
+  const re = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/; //letras y numeros
+  return re.test(user);
+}
+
+export function validatePassword(password) {
+  const re = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; // Expresión regular
+  return re.test(password);
 }

@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text,Image, ScrollView, StyleSheet } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
 import Icon from 'react-native-vector-icons/Feather';
-import BottomNavigation from '@/components/BottomNavigation';
-import Header from '@/components/Header';
+import BottomNavigation from '@/src/components/BottomNavigation';
+import Header from '@/src/components/Header';
+
 
 const Home: React.FC = () => {
-  const genericImage = require('@/assets/images/imagePost.png');
+  const genericImage = require("../assets/images/imagePost.png");
   const renderPost = (key: number) => (
     <View key={key} style={styles.postCard}>
       {/* User Info */}

@@ -1,10 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import { useFonts } from 'expo-font';
-import { Feather, Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { Feather, Ionicons, /*MaterialIcons,*/ FontAwesome } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
-import BottomNavigation from '@/components/BottomNavigation';
-import Header from '@/components/Header';
+import BottomNavigation from '@/src/components/BottomNavigation';
+import Header from '@/src/components/Header';
+
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
 
 
 export default function Config() {
