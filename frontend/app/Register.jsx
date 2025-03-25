@@ -5,10 +5,11 @@ import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView,
   Keyboard,} from "react-native";
 import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
-import { useNavigation } from "@react-navigation/native";
+//import { useNavigation } from "@react-navigation/native";
 import { validateEmail, validateName, validatePhone, validateUser, validatePassword} from "../src/utils/helpers";
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
+import { router } from "expo-router";
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -26,10 +27,8 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormValues());
   const [errors, setErrors] = useState({});
-  const navigation = useNavigation();
   //const [loading, setLoading] = useState(false);
 
-  //const navigation = useNavigation();
 
   const onChange = (text, field) => {
     setFormData({ ...formData, [field]: text });
@@ -103,7 +102,7 @@ export default function Register() {
 
     // Simulación de registro exitoso y redirección al Login
     console.log("Usuario registrado:", formData);
-    navigation.navigate("Login");
+    router.push("/Home");
   };
   
 
@@ -145,7 +144,9 @@ export default function Register() {
                   keyboardType={keyboardType || "default"}
                 />
                 {errors[field] ? (
-                  <CustomText style={styles.errorText}>{errors[field]}</CustomText>
+                  <CustomText style={styles.errorText}>
+                    {errors[field]}
+                  </CustomText>
                 ) : null}
               </View>
             ))}
@@ -180,7 +181,7 @@ export default function Register() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton]}
-                onPress={() => navigation.navigate("Login")}
+                onPress={() => router.push("/Login")}
               >
                 <CustomText style={styles.buttonText}>
                   Volver a inicio

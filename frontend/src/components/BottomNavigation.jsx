@@ -1,9 +1,8 @@
-import type React from "react";
-import { router } from 'expo-router';
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
-import Icon from "react-native-vector-icons/Feather"
+import { router } from "expo-router";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 
-const BottomNavigation: React.FC = () => {
+const BottomNavigation = () => {
   return (
     <View style={styles.bottomNav}>
       <TouchableOpacity>
@@ -14,7 +13,7 @@ const BottomNavigation: React.FC = () => {
         <Icon name="search" size={32} color="#000" />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push('/Home')}>
+      <TouchableOpacity onPress={() => router.push("/Home")}>
         <Icon name="home" size={32} color="#000" />
       </TouchableOpacity>
 
@@ -28,11 +27,11 @@ const BottomNavigation: React.FC = () => {
       </TouchableOpacity>
 
       <TouchableOpacity>
-      <Icon name="user" size={32} color="#000" />
+        <Icon name="user" size={32} color="#000" />
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   bottomNav: {
@@ -70,7 +69,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     borderRadius: 12,
   },
-})
+});
 
-export default BottomNavigation
-
+export default BottomNavigation;

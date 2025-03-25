@@ -10,11 +10,14 @@ import user from "../assets/images/login.png";
 import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
 import Head from "../src/components/Head";
-import { useNavigation } from "@react-navigation/native";
+import { router } from "expo-router";
+//import { useRouter } from "expo-router";
+import { useFonts } from "expo-font";
 import { useState } from "react";
 
 export default function Login() {
-  const navigation = useNavigation();
+
+  //const router = useRouter();
 
   const [formData, setFormData] = useState({
     user: "",
@@ -48,7 +51,7 @@ export default function Login() {
 
     // Simulación de inicio de sesión exitoso y redirección al Home
     console.log("Inicio correcto", formData);
-    navigation.navigate("Home");
+    router.push("/Home");
   };
 
   return (
@@ -66,7 +69,7 @@ export default function Login() {
           value={formData.user}
         />
         {errors.user ? (
-          <Text style={styles.errorText}>{errors.user}</Text>
+          <CustomText style={styles.errorText}>{errors.user}</CustomText>
         ) : null}
       </View>
 
@@ -79,7 +82,7 @@ export default function Login() {
           value={formData.password}
         />
         {errors.password ? (
-          <Text style={styles.errorText}>{errors.password}</Text>
+          <CustomText style={styles.errorText}>{errors.password}</CustomText>
         ) : null}
       </View>
 
@@ -99,7 +102,7 @@ export default function Login() {
       </View>
 
       <CustomText style={{ fontSize: 18 }}>¿No tienes cuenta?</CustomText>
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+      <TouchableOpacity onPress={() => router.push("/Register")}>
         <CustomText style={{ fontSize: 20, fontFamily: "ComicBold" }}>
           ¡Regístrate!
         </CustomText>
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
     textAlign: "center",
+    fontFamily: "ComicBold",
   },
   buttonContainer: {
     flexDirection: "row",
