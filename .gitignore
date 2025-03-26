@@ -62,7 +62,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.expo-shared
 
 # NestJS
-*.js
 *.js.map
 *.d.ts
 *.d.ts.map

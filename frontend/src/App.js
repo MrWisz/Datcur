@@ -3,12 +3,13 @@ import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useCallback } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import Navigation from './navigation/Navigation';
+import { ExpoRouter } from "expo-router";
 
 export default function App() {
 
   const [fontsLoaded] = useFonts({
     Comic: require("../assets/fonts/ComicNeue-Regular.otf"),
+    ComicBold: require("../assets/fonts/ComicNeue_Bold.otf"),
   });
 
   //mostrar la pantalla por mas tiempo hasta que la fuente este cargada
@@ -28,7 +29,24 @@ export default function App() {
   if (!fontsLoaded) return null;
   return (
     <View onLayout={onLayout} style={{ flex: 1 }}>
-      <Navigation />
+      <FontProvider>
+        <ExpoRouter />
+      </FontProvider>
     </View>
   );
 }
+
+// Componente FontProvider
+import React, { createContext, useContext } from "react";
+
+const FontContext = createContext();
+
+export const FontProvider = ({ children }) => {
+  return (
+    <FontContext.Provider value={{ fontFamily: "Comic" }}>
+      {children}
+    </FontContext.Provider>
+  );
+};
+
+export const useFont = () => useContext(FontContext);
