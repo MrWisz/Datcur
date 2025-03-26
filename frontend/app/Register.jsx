@@ -218,6 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     margin: 5,
     paddingLeft: "5%",
+    fontFamily: "Comic-Bold",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: "ComicBold",
+    fontFamily: "Comic-Bold",
     textAlign: "center",
   },
   errorText: {

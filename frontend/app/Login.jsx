@@ -103,7 +103,7 @@ export default function Login() {
 
       <CustomText style={{ fontSize: 18 }}>¿No tienes cuenta?</CustomText>
       <TouchableOpacity onPress={() => router.push("/Register")}>
-        <CustomText style={{ fontSize: 20, fontFamily: "ComicBold" }}>
+        <CustomText style={[styles.buttonText, { fontSize: 20 }]}>
           ¡Regístrate!
         </CustomText>
       </TouchableOpacity>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
     textAlign: "center",
-    fontFamily: "ComicBold",
+    fontFamily: "Comic-Bold",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontFamily: "ComicBold",
+    fontFamily: "Comic-Bold",
     textAlign: "center",
   },
 });

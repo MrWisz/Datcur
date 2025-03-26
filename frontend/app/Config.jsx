@@ -27,18 +27,21 @@ export default function Config() {
           text="Modificar información personal"
         />
         <MenuItem icon="lightbulb-outline" text="Seguridad" />
-        <TouchableOpacity onPress={() => router.push("/Login")}>
-          <MenuItem icon="" text="Salir" noIcon />
-        </TouchableOpacity>
+          <MenuItem
+            icon=""
+            text="Salir"
+            noIcon
+            onPress={() => router.push("/Login")}
+          />
       </View>
       <BottomNavigation />
     </View>
   );
 }
 
-const MenuItem = ({ icon, text, noIcon = false }) => {
+const MenuItem = ({ icon, text, noIcon = false, onPress }) => {
   return (
-    <TouchableOpacity style={styles.menuItem}>
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       {!noIcon && (
         <MaterialIcons
           name={icon}
