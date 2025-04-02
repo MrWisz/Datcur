@@ -1,15 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { TokensModule } from './tokens/tokens.module';
+import { AuthModule } from './auth/auth.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { Connection } from 'mongoose';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb+srv://100127067271ucla:gXurwe4tCaLhSdpx@cluster0.xksb0.mongodb.net/datcur?retryWrites=true&w=majority', {
-      connectionFactory: (connection) => {
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/defaultdb', {
+      connectionFactory: (connection: Connection) => {
         connection.once('open', () => {
           console.log('Connected to MongoDB Atlas');
         });
@@ -22,6 +24,7 @@ import { TokensModule } from './tokens/tokens.module';
     UsersModule,
     PostsModule,
     TokensModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
