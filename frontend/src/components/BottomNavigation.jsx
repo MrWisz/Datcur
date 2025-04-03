@@ -6,18 +6,28 @@ const BottomNavigation = () => {
   return (
     <View style={styles.bottomNav}>
       <TouchableOpacity>
-        <Icon name="star" size={32} color="#000" />
+        <Icon
+          name="star"
+          onPress={() => router.push("/Favorites")}
+          size={32}
+          color="#000"
+        />
       </TouchableOpacity>
 
       <TouchableOpacity>
-        <Icon name="search" size={32} color="#000" />
+        <Icon
+          name="search"
+          onPress={() => router.push("/Search")}
+          size={32}
+          color="#000"
+        />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.push("/Home")}>
         <Icon name="home" size={32} color="#000" />
       </TouchableOpacity>
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/NewPost")}>
         <View style={styles.editIconContainer}>
           <Icon name="file-text" size={32} color="#000" />
           <View style={styles.plusBadge}>
