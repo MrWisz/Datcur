@@ -33,6 +33,7 @@ export default function Config() {
         <MenuItem
           icon="lightbulb-outline"
           text="Modificar información personal"
+          onPress={() => router.push("/ChangeInPersonal")}
         />
         <MenuItem icon="lightbulb-outline" text="Seguridad" />
         <MenuItem
