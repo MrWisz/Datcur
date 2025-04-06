@@ -86,7 +86,9 @@ export default function Login() {
         ) : null}
       </View>
 
-      <CustomText>¿Olvidaste tu contraseña?</CustomText>
+      <TouchableOpacity onPress={() => router.push("/RecoverPassword")}>
+        <CustomText>¿Olvidaste tu contraseña?</CustomText>
+      </TouchableOpacity>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={() => initUser()}>

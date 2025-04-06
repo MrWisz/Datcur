@@ -20,19 +20,28 @@ export default function Config() {
     <View style={styles.container}>
       <Header />
       <View style={styles.menuContainer}>
-        <MenuItem icon="lightbulb-outline" text="Cambiar contraseña" />
-        <MenuItem icon="lightbulb-outline" text="Cambiar foto de perfil" />
+        <MenuItem
+          icon="lightbulb-outline"
+          text="Cambiar contraseña"
+          onPress={() => router.push("/ChangePassword")}
+        />
+        <MenuItem
+          icon="lightbulb-outline"
+          text="Cambiar foto de perfil"
+          onPress={() => router.push("/UserConfiguration")}
+        />
         <MenuItem
           icon="lightbulb-outline"
           text="Modificar información personal"
+          onPress={() => router.push("/ChangeInPersonal")}
         />
         <MenuItem icon="lightbulb-outline" text="Seguridad" />
-          <MenuItem
-            icon=""
-            text="Salir"
-            noIcon
-            onPress={() => router.push("/Login")}
-          />
+        <MenuItem
+          icon=""
+          text="Salir"
+          noIcon
+          onPress={() => router.push("/Login")}
+        />
       </View>
       <BottomNavigation />
     </View>

@@ -10,6 +10,7 @@ import { validateEmail, validateName, validatePhone, validateUser, validatePassw
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
+import Head from "../src/components/Head";
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -102,7 +103,7 @@ export default function Register() {
 
     // Simulación de registro exitoso y redirección al Login
     console.log("Usuario registrado:", formData);
-    router.push("/Home");
+    router.push("/UserConfiguration");
   };
   
 
@@ -114,6 +115,7 @@ export default function Register() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.inner}>
+            < Head/>
             <Image source={logo} style={[styles.img, { marginTop: "5%" }]} />
             <CustomText style={[styles.buttonText, { fontSize: 30 }]}>
               Registro de usuario
