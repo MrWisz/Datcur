@@ -37,7 +37,12 @@ const BottomNavigation = () => {
       </TouchableOpacity>
 
       <TouchableOpacity>
-        <Icon name="user" size={32} color="#000" />
+        <Icon
+          name="user"
+          onPress={() => router.push("/Profile")}
+          size={32}
+          color="#000"
+        />
       </TouchableOpacity>
     </View>
   );

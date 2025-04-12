@@ -15,6 +15,7 @@ import { validatePassword } from "../utils/helpers";
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export default function NewPassword() {
   const [showPassword, setShowPassword] = useState(false);
@@ -79,7 +80,17 @@ export default function NewPassword() {
     }
 
     console.log("Contraseña guardada:", formData);
-    router.push("/Login");
+    
+    Toast.show({
+          type: "customToast",
+          text1: "¡Cambio exitoso!",
+          text2: "Se ha reestablecido tu contraseña.",
+          visibilityTime: 3000,
+        });
+    
+        setTimeout(() => {
+          router.push("/Login");
+        }, 3000);
   };
 
   return (

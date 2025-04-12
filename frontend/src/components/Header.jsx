@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 110,
     justifyContent: "center",
+    marginTop: "6%",
   },
   header: {
     backgroundColor: "transparent",

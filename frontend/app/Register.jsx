@@ -5,12 +5,12 @@ import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView,
   Keyboard,} from "react-native";
 import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
-//import { useNavigation } from "@react-navigation/native";
 import { validateEmail, validateName, validatePhone, validateUser, validatePassword} from "../src/utils/helpers";
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
 import Head from "../src/components/Head";
+import Toast from "react-native-toast-message";
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -101,9 +101,20 @@ export default function Register() {
       return;
     }
 
-    // Simulación de registro exitoso y redirección al Login
+    Toast.show({
+      type: "customToast",
+      text1: "¡Registro exitoso!",
+      text2: "Tus datos han sido guardados correctamente.",
+      visibilityTime: 3000,
+    });
+
+    setTimeout(() => {
+      router.push("/UserConfiguration");
+    }, 3000);
+
+    // Simulación de registro exitoso
     console.log("Usuario registrado:", formData);
-    router.push("/UserConfiguration");
+    //router.push("/UserConfiguration");
   };
   
 
@@ -115,8 +126,8 @@ export default function Register() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.inner}>
-            < Head/>
-            <Image source={logo} style={[styles.img, { marginTop: "5%" }]} />
+            <Head />
+            <Image source={logo} style={[styles.img, { marginTop: "25%" }]} />
             <CustomText style={[styles.buttonText, { fontSize: 30 }]}>
               Registro de usuario
             </CustomText>
@@ -139,7 +150,7 @@ export default function Register() {
             ].map(({ field, placeholder, keyboardType }) => (
               <View key={field}>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { fontFamily: "Comic-Bold" }]}
                   placeholder={placeholder}
                   onChangeText={(text) => onChange(text, field)}
                   value={formData[field]}
@@ -153,25 +164,32 @@ export default function Register() {
               </View>
             ))}
 
-            {["password", "confirm"].map((field) => (
-              <Input
-                key={field}
-                containerStyle={styles.input}
-                placeholder={
-                  field === "password" ? "Contraseña" : "Confirmar contraseña"
-                }
-                secureTextEntry={!showPassword}
-                onChangeText={(text) => onChange(text, field)}
-                value={formData[field]}
-                errorMessage={errors[field]}
-                rightIcon={
-                  <Icon
-                    type="material-community"
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
-              />
+            {[
+              { field: "password", placeholder: "Contraseña" },
+              { field: "confirm", placeholder: "Confirmar contraseña" },
+            ].map(({ field, placeholder }) => (
+              <View key={field}>
+                <Input
+                  containerStyle={styles.input}
+                  inputStyle={{ fontFamily: "Comic-Bold" }}
+                  placeholder={placeholder}
+                  secureTextEntry={!showPassword}
+                  onChangeText={(text) => onChange(text, field)}
+                  value={formData[field]}
+                  rightIcon={
+                    <Icon
+                      type="material-community"
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      onPress={() => setShowPassword(!showPassword)}
+                    />
+                  }
+                />
+                {errors[field] ? (
+                  <CustomText style={styles.errorText}>
+                    {errors[field]}
+                  </CustomText>
+                ) : null}
+              </View>
             ))}
 
             <View style={styles.buttonContainer}>
@@ -221,6 +239,7 @@ const styles = StyleSheet.create({
     margin: 5,
     paddingLeft: "5%",
     fontFamily: "Comic-Bold",
+    fontSize: 18,
   },
   buttonContainer: {
     flexDirection: "row",

@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
 import Header from "../src/components/Header";
+import Toast from "react-native-toast-message";
 
 export default function ChangePassword() {
   const [showPassword, setShowPassword] = useState(false);
@@ -86,7 +87,17 @@ export default function ChangePassword() {
     }
 
     console.log("Contraseña guardada:", formData);
-    router.push("/Home");
+    Toast.show({
+            type: "customToast",
+            text1: "Tu contraseña",
+            text2: "Ha sido cambiada correctamente",
+            visibilityTime: 3000,
+            position: "center",
+          });
+    
+        setTimeout(() => {
+          router.push("/Home");
+        }, 3000);
   };
 
   return (
@@ -125,7 +136,6 @@ export default function ChangePassword() {
                 secureTextEntry={!showPassword}
                 onChangeText={(text) => handleChange(text, "newPassword")}
                 value={formData.newPassword}
-                errorMessage={errors.newPassword}
                 rightIcon={
                   <Icon
                     type="material-community"
@@ -134,6 +144,9 @@ export default function ChangePassword() {
                   />
                 }
               />
+              {errors.newPassword ? (
+                <Text style={styles.errorText}>{errors.newPassword}</Text>
+              ) : null}
             </View>
 
             <View style={styles.inputContainer}>
@@ -143,7 +156,6 @@ export default function ChangePassword() {
                 secureTextEntry={!showPassword}
                 onChangeText={(text) => handleChange(text, "confirmPassword")}
                 value={formData.confirmPassword}
-                errorMessage={errors.confirmPassword}
                 rightIcon={
                   <Icon
                     type="material-community"
@@ -152,6 +164,9 @@ export default function ChangePassword() {
                   />
                 }
               />
+              {errors.confirmPassword ? (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              ) : null}
             </View>
 
             <View style={styles.buttonContainer}>

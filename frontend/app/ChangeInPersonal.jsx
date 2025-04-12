@@ -14,6 +14,7 @@ import CustomText from "../src/components/CustomText";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Header from "../src/components/Header";
 import { router } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export default function ChangeInPersonal() {
   const [formData, setFormData] = useState({
@@ -42,7 +43,19 @@ export default function ChangeInPersonal() {
   const handleSubmit = () => {
     console.log("Datos finales:", formData);
     // espacio para enviar los datos a la base de datos
-    router.push("/Home");
+    
+    //mensaje confirmacion
+    Toast.show({
+                type: "customToast",
+                text1: "Exito",
+                text2: "Información modificada con éxito",
+                visibilityTime: 3000,
+                position: "center",
+              });
+        
+            setTimeout(() => {
+              router.push("/Home");
+            }, 3000);
   };
 
   return (
