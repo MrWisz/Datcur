@@ -4,6 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { View, StyleSheet, Text } from "react-native";
 import { useFonts } from "expo-font";
+import Toast from "react-native-toast-message";
+import CustomToast from "../src/components/CustomToast";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -24,6 +26,16 @@ export default function RootLayout() {
       <View style={styles.container}>
         <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="light" />
+        {/*mensajitos de confirmacion */}
+        <Toast
+          config={{
+            customToast: (props) => (
+              <View>
+                <CustomToast {...props} />
+              </View>
+            ),
+          }}
+        />
       </View>
     </ThemeProvider>
   );

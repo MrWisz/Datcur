@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { useFonts } from "expo-font";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import BottomNavigation from "../src/components/BottomNavigation";
@@ -15,6 +15,18 @@ export default function Config() {
   if (!fontsLoaded) {
     return null;
   }
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Cerrar sesión",
+      "¿Estás seguro de que deseas salir?",
+      [
+        { text: "Si", style: "cancel" },
+        { text: "Cancelar", onPress: () => router.push("/Login") },
+      ],
+      { cancelable: true }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -40,7 +52,7 @@ export default function Config() {
           icon=""
           text="Salir"
           noIcon
-          onPress={() => router.push("/Login")}
+          onPress={handleLogout}
         />
       </View>
       <BottomNavigation />

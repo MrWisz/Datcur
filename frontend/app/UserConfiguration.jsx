@@ -17,6 +17,7 @@ import profile from "../assets/images/addprofile.png";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
+import Toast from "react-native-toast-message";
 
 export default function UserConfiguration() {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -34,6 +35,22 @@ export default function UserConfiguration() {
         setSelectedImage(result.assets[0].uri);
       }
     };
+
+    //Funcion para mostrar mensaje de confirmacion
+    const handlePress = () => {
+      Toast.show({
+        type: "customToast",
+        text1: "Exito",
+        text2: "¡Tu información ha sido guardada con exito!",
+        visibilityTime: 3000,
+        position: "center",
+      });
+
+    setTimeout(() => {
+      router.push("/Home");
+    }, 3000);
+
+  };
 
     return (
       <KeyboardAvoidingView
@@ -67,10 +84,7 @@ export default function UserConfiguration() {
                 multiline={true}
               ></TextInput>
               <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={() => router.push("/Home")}
-                >
+                <TouchableOpacity style={styles.button} onPress={handlePress}>
                   <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
                     Guardar cambios
                   </CustomText>
@@ -97,9 +111,6 @@ export default function UserConfiguration() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //backgroundColor: "#fff",
-    //alignItems: "center",
-    //justifyContent: "center",
   },
   scrollContainer: {
     flexGrow: 1,
