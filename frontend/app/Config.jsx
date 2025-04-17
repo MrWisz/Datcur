@@ -21,8 +21,8 @@ export default function Config() {
       "Cerrar sesión",
       "¿Estás seguro de que deseas salir?",
       [
-        { text: "Si", style: "cancel" },
-        { text: "Cancelar", onPress: () => router.push("/Login") },
+        { text: "Si", onPress: () => router.push("/Login") },
+        { text: "Cancelar", style: "cancel" },
       ],
       { cancelable: true }
     );
