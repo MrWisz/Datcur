@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "dda632b7-0fb6-4e22-9386-f2584a6d0b9c"
+      }
+    },
+    "android": {
+      "package": "com.jenniiramirez22.dactur"
+    }
+  }
+}

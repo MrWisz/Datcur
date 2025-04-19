@@ -1,44 +1,47 @@
 import React from "react";
-import { View, Text, Image, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, useState } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
+import Post from "../src/components/Post";
 
 const Home = () => {
   const genericImage = require("../assets/images/imagePost.png");
 
-  const renderPost = (key) => (
-    <View key={key} style={styles.postCard}>
-      {/* User Info */}
-      <View style={styles.userInfo}>
-        <View style={styles.avatar}>
-          <Icon name="user" size={18} color="#777" />
-        </View>
-        <View style={styles.username} />
-      </View>
+  {
+    /*manejo de fecha */
+  }
+  const getCurrentDate = () => {
+    const date = new Date();
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
-      {/* Post Content */}
-      <View style={styles.postContent}>
-        <View style={styles.textLine} />
-        <View style={styles.textLine} />
-      </View>
-
-      {/* Post Image */}
-      <View style={styles.imageContainer}>
-        <Image style={styles.postImage} source={genericImage} />
-      </View>
-
-      <View style={styles.divider} />
-
-      {/* Interaction Buttons */}
-      <View style={styles.interactions}>
-        <Icon name="heart" size={20} color="#f44336" />
-        <Icon name="message-circle" size={20} color="#333" />
-        <Icon name="star" size={20} color="#FFC107" />
-      </View>
-    </View>
-  );
-
+  const posts = [
+    {
+      id: "1",
+      usuario_id: "Usuario 1",
+      userAvatar:
+        "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg",
+      description: "¡Mi primera publicación!",
+      date: getCurrentDate(),
+      image: "https://picsum.photos/300/200",
+      likes: 4,
+    },
+    {
+      id: "2",
+      usuario_id: "Usuario 2",
+      userAvatar: "https://cdn-icons-png.freepik.com/512/13135/13135509.png",
+      description: "Hola mundo en Datcur",
+      date: getCurrentDate(),
+      image: "https://picsum.photos/300/201",
+      likes: 9,
+    },
+  ];
+  
   return (
     <View style={styles.container}>
       <Header />
@@ -46,8 +49,9 @@ const Home = () => {
       {/* Content Area */}
       <View style={styles.contentArea}>
         <ScrollView style={styles.scrollView}>
-          {renderPost(1)}
-          {renderPost(2)}
+          {posts.map((item) => (
+            <Post key={item.id} post={item} />
+          ))}
         </ScrollView>
       </View>
 
@@ -68,13 +72,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingBottom: 10,
-  },
-  postCard: {
-    marginVertical: 8,
-    marginHorizontal: 16,
-    backgroundColor: "#e5e5e5", // gray-200
-    borderRadius: 8,
-    padding: 10,
   },
   userInfo: {
     flexDirection: "row",
