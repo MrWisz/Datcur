@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
@@ -49,12 +50,39 @@ const ProfileFollower = () => {
     </View>
   );
 
+  const [showOptions, setShowOptions] = useState(false);
+  const [buttonText, setButtonText] = useState("Siguiendo ▼");
+
+  const toggleOptions = () => {
+    setShowOptions(!showOptions);
+  };
+
+  const UnFollowed = () => {
+    setButtonText("Seguir");
+    setShowOptions(false); 
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.contentArea}>
         <ScrollView style={styles.scrollView}>
           <View style={styles.rectangle}>
             <Header />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={toggleOptions}>
+                <CustomText style={styles.buttonText}>{buttonText}</CustomText>
+              </TouchableOpacity>
+              {showOptions && (
+                <View style={styles.optionsContainer}>
+                  <TouchableOpacity
+                    style={styles.option}
+                    onPress={UnFollowed}
+                  >
+                    <CustomText style={styles.text}>Dejar de Seguir</CustomText>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
             <Image source={user} style={[styles.img, { marginTop: "5%" }]} />
             <CustomText style={styles.title}>Name User</CustomText>
             <CustomText style={styles.subtitle}>Hello! I like....</CustomText>
@@ -167,6 +195,46 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
+  },
+  buttonContainer: {
+    flex: 1,
+    //justifyContent: "flex-start",
+    //alignItems: "rigth",
+    gap: 10,
+    marginLeft: "60%",
+    //marginTop: "2%",
+    marginBottom: "2%",
+  },
+  button: {
+    width: 120,
+    height: 30,
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#FFC000",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    alignSelf: "left",
+  },
+  buttonText: {
+    fontSize: 16,
+    fontFamily: "Comic-Bold",
+    textAlign: "center",
+  },
+  optionsContainer: {
+    marginLeft: "8%",
+    marginTop: "-8%",
+  },
+  option: {
+    width: 110,
+    height: 40,
+    padding: 10,
+    backgroundColor: "#eeeeee",
+    //marginBottom: 5,
+  },
+  text: {
+    color: "red",
+    fontSize: 12,
   },
 });
 
