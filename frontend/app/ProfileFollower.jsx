@@ -13,6 +13,7 @@ import Header from "../src/components/Header";
 import user from "../assets/images/usuario.png";
 import CustomText from "../src/components/CustomText";
 import Icon from "react-native-vector-icons/Feather";
+import ActionsFollower from "../src/components/ActionsFollower";
 
 const ProfileFollower = () => {
   const genericImage = require("../assets/images/imagePost.png");
@@ -57,6 +58,7 @@ const ProfileFollower = () => {
             <Image source={user} style={[styles.img, { marginTop: "5%" }]} />
             <CustomText style={styles.title}>Name User</CustomText>
             <CustomText style={styles.subtitle}>Hello! I like....</CustomText>
+            <ActionsFollower />
             {renderPost(1)}
             {renderPost(2)}
           </View>
