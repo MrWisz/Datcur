@@ -1,0 +1,35 @@
+Frontend:
+
+Comando utilizado crear proyecto desde 0 con expo en la carpeta frontend:
+* npm create-expo-app frontend --template blank
+
+Instalar JDK Setup Android Studio (emulador de android en Windows) 
+Seguir instrucciones: https://docs.expo.dev/workflow/android-studio-emulator
+
+Instalar dependencias expo
+
+Instalar aplicacion expo en el telefono
+
+Ejecutar proyecto:
+Ubicar la carpeta de frontend en el equipo (cambiar ubicacion con comando cd):
+cd C:...\Dactur\frontend
+
+En carpeta del proyecto, ejecutar el Comando:
+
+npm start
+
+se muestran todas las opciones para visualizar el proyecto
+se puede escanear el QR por la aplicacion expo desde el telefono 
+o en la aplicacion de expo en el telefono introducir la ip que muestra la terminal
+
+Al presionar la opcion a
+
+se abrirá la version android
+(si el telefono esta conectado por cable usb y la depuracion y opciones de desarrollador estan activadas el proyecto de muestra automaticamente en el telefono)
+
+Otra opcion (en lugar de ejecutar en la terminal npm start):
+
+Es ejecutar: 
+npm run android
+
+
