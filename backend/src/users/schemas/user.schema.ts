@@ -3,6 +3,9 @@ import { Document, Types } from 'mongoose';
 
 @Schema()
 export class User extends Document {
+  @Prop({ required: true, unique: true })
+  username: string;
+
   @Prop({ required: true })
   nombre: string;
 
@@ -49,3 +52,10 @@ export class User extends Document {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.set('toJSON', {
+  transform: (_, ret) => {
+    delete ret.password_hash;
+    return ret;
+  },
+});

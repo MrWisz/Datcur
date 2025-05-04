@@ -1,17 +1,63 @@
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsArray,
+  IsDateString,
+  ValidateNested
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class DireccionDto {
+  @IsOptional()
+  @IsString()
+  calle?: string;
+
+  @IsOptional()
+  @IsString()
+  ciudad?: string;
+
+  @IsOptional()
+  @IsString()
+  pais?: string;
+}
+
 export class UpdateUserDto {
-    readonly nombre?: string;
-    readonly email?: string;
-    readonly telefono?: string;
-    readonly direccion?: {
-      calle?: string;
-      ciudad?: string;
-      pais?: string;
-    };
-    readonly gustos?: string[];
-    readonly foto_perfil?: string;
-    readonly password_hash?: string;
-    readonly favoritos?: string[];
-    readonly seguidores?: string[];
-    readonly seguidos?: string[];
-    readonly fecha_registro?: Date;
-  }
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  nombre?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DireccionDto)
+  direccion?: DireccionDto;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  gustos?: string[];
+
+  @IsOptional()
+  @IsString()
+  foto_perfil?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @IsOptional()
+  @IsDateString()
+  fecha_registro?: Date;
+}
