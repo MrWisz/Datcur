@@ -4,13 +4,21 @@ import { Model, Types } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const createdUser = new this.userModel(createUserDto);
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+
+    const createdUser = new this.userModel({
+      ...createUserDto,
+      password_hash: hashedPassword,
+    });
+
     return createdUser.save();
   }
 
@@ -25,6 +33,14 @@ export class UsersService {
     }
     return user;
   }
+  
+  async findByUsername(username: string): Promise<User> {
+    const user = await this.userModel.findOne({ username }).exec();
+    if (!user) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+    return user;
+  }
 
   async findByEmail(email: string): Promise<User> {
     const user = await this.userModel.findOne({ email }).exec();
@@ -35,12 +51,27 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const updatedUser = await this.userModel.findByIdAndUpdate(new Types.ObjectId(id), updateUserDto, { new: true }).exec();
+    const updateData: any = { ...updateUserDto };
+  
+    if (updateUserDto.password) {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(updateUserDto.password, saltRounds);
+      updateData.password_hash = hashedPassword;
+      delete updateData.password; // Eliminar campo no usado en el schema
+    }
+  
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      updateData,
+      { new: true }
+    ).exec();
+  
     if (!updatedUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+  
     return updatedUser;
-  }
+  }  
 
   async remove(id: string): Promise<User> {
     const deletedUser = await this.userModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
