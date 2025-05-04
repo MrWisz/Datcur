@@ -1,33 +1,54 @@
-import { IsString, IsArray, IsDate, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsDateString,
+  IsNotEmpty,
+  ValidateNested,
+  IsOptional,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ComentarioDto {
+  @IsString()
+  usuario_id: string;
+
+  @IsString()
+  comentario: string;
+
+  @IsDateString()
+  fecha_comentario: Date;
+}
 
 export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
-  readonly usuario_id: string;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly descripcion: string;
+  descripcion: string;
 
   @IsArray()
-  readonly fotos: string[];
+  @IsString({ each: true })
+  fotos: string[];
 
   @IsArray()
-  readonly etiquetas: string[];
+  @IsString({ each: true })
+  etiquetas: string[];
 
-  @IsDate()
-  readonly fecha_creacion: Date;
+  @IsOptional()
+  @IsDateString()
+  fecha_creacion?: Date;
 
+  @IsOptional()
   @IsArray()
-  readonly likes: string[];
+  @IsString({ each: true })
+  likes?: string[];
 
+  @IsOptional()
   @IsArray()
-  readonly comentarios: {
-    usuario_id: string;
-    comentario: string;
-    fecha_comentario: Date;
-  }[];
+  @ValidateNested({ each: true })
+  @Type(() => ComentarioDto)
+  comentarios?: ComentarioDto[];
 
+  @IsOptional()
   @IsArray()
-  readonly favoritos: string[];
+  @IsString({ each: true })
+  favoritos?: string[];
 }
