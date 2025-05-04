@@ -14,13 +14,15 @@ const posts_module_1 = require("./posts/posts.module");
 const auth_module_1 = require("./auth/auth.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/defaultdb', {
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI, {
                 connectionFactory: (connection) => {
                     connection.once('open', () => {
                         console.log('Connected to MongoDB Atlas');
