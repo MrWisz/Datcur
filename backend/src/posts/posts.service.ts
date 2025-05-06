@@ -39,7 +39,6 @@ export class PostsService {
   }
 
   async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
-    // ❌ Ignorar comentarios en la actualización
     const { comentarios, ...allowedFields } = updatePostDto;
 
     const updatedPost = await this.postModel.findByIdAndUpdate(
