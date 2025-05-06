@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post } from './schemas/post.schema';
@@ -9,9 +9,21 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostsService {
   constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
 
-  async create(createPostDto: CreatePostDto): Promise<Post> {
-    const createdPost = new this.postModel(createPostDto);
-    return createdPost.save();
+  async create(createPostDto: CreatePostDto, usuario_id: string): Promise<Post> {
+    try {
+      const createdPost = new this.postModel({
+        ...createPostDto,
+        usuario_id: new Types.ObjectId(usuario_id),
+        fecha_creacion: createPostDto.fecha_creacion ?? new Date(),
+        likes: [],
+        comentarios: [],
+        favoritos: [],
+      });
+      return await createdPost.save();
+    } catch (error) {
+      console.error('Error al crear el post:', error);
+      throw new BadRequestException('Error al crear el post. Verifica los datos enviados.');
+    }
   }
 
   async findAll(): Promise<Post[]> {
@@ -27,7 +39,14 @@ export class PostsService {
   }
 
   async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
-    const updatedPost = await this.postModel.findByIdAndUpdate(new Types.ObjectId(id), updatePostDto, { new: true }).exec();
+    const { comentarios, ...allowedFields } = updatePostDto;
+
+    const updatedPost = await this.postModel.findByIdAndUpdate(
+      new Types.ObjectId(id),
+      allowedFields,
+      { new: true }
+    ).exec();
+
     if (!updatedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -42,19 +61,24 @@ export class PostsService {
     return deletedPost;
   }
 
-  async addComment(id: string, comment: { usuario_id: string; comentario: string; fecha_comentario: Date }): Promise<Post> {
+  async addComment(
+    id: string,
+    comment: { usuario_id: string; comentario: string; fecha_comentario: Date }
+  ): Promise<Post> {
     const post = await this.findOne(id);
     post.comentarios.push({
       ...comment,
       usuario_id: new Types.ObjectId(comment.usuario_id),
-      _id: new Types.ObjectId(), 
+      _id: new Types.ObjectId(),
     });
     return post.save();
   }
 
   async removeComment(id: string, commentId: string): Promise<Post> {
     const post = await this.findOne(id);
-    post.comentarios = post.comentarios.filter(comment => !comment._id.equals(new Types.ObjectId(commentId)));
+    post.comentarios = post.comentarios.filter(
+      (comment) => !comment._id.equals(new Types.ObjectId(commentId))
+    );
     return post.save();
   }
 }
