@@ -17,7 +17,7 @@ export function validatePhone(phone) {
 }
 
 export function validateUser(user) {
-  const re = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/; //letras y numeros
+  const re = /^\S+$/; //no espcios en blanco
   return re.test(user);
 }
 

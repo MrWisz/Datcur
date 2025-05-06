@@ -54,7 +54,7 @@ export default function Register() {
           errorMsg = "Ingresa una direccion valida con @";
         break;
       case "user":
-        if (!validateUser(value)) errorMsg = "Ingresa al menos un numero";
+        if (!validateUser(value)) errorMsg = "No dejar espacios en blanco";
         break;
       case "password":
         if (!validatePassword(value))

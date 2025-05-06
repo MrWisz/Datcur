@@ -1,13 +1,33 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TextInput } from "react-native";
+import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import { ButtonPrimary } from "../src/components/Button";
 import { ButtonSecondary } from "../src/components/Button";
+import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
+import iconAdjuntar from "../assets/icons/iconAdjuntar.png";
 
 const NewPost = () => {
-  const iconGallery = require("../assets/icons/iconAdjuntar.png");
+  const [selectedImage, setSelectedImage] = useState(null);
+  
+      // Función para abrir la galería
+      const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 1,
+        });
+  
+        if (!result.canceled) {
+          setSelectedImage(result.assets[0].uri);
+        }
+      };
+
+
+  //const iconGallery = require("../assets/icons/iconAdjuntar.png");
   const [fontsLoaded] = useFonts({
     ComicNeue: require("../assets/fonts/ComicNeue-Regular.ttf"),
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
@@ -33,19 +53,26 @@ const NewPost = () => {
         <TextInput
           multiline={true}
           numberOfLines={10}
-          style={{ height: 200, width: "80%", backgroundColor: "#BFEEFE" }}
+          style={{ height: 150, width: "80%", backgroundColor: "#BFEEFE" }}
         />
 
         <View
-          style={{
+          style={{ height: 250, width: "80%", marginBottom: 20 }}
+          /*style={{
             flexDirection: "row",
             alignItems: "center",
             fontFamily: "ComicNeue",
             marginBottom: 30,
-          }}
+          }}*/
         >
-          <Image source={iconGallery}></Image>
-          <Text>Adjuntar Imagen</Text>
+          <TouchableOpacity onPress={pickImage} style={{ flex: 1 }}>
+            {selectedImage && (
+              <Image source={{ uri: selectedImage }} style={styles.img} />
+            )}
+            <Text style={{ textAlign: "center", marginTop: 10 }}>
+              {selectedImage ? "Cambiar Imagen" : "Adjuntar Imagen"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -89,6 +116,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingBottom: 10,
+  },
+  img: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover", 
+    borderRadius: 10,
   },
 });
 
