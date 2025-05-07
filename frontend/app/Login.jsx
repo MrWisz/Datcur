@@ -14,10 +14,14 @@ import { router } from "expo-router";
 //import { useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import { useState } from "react";
+import Constants from 'expo-constants';
+
 
 export default function Login() {
 
   //const router = useRouter();
+
+const API_URL = Constants.expoConfig.extra.API_URL;
 
   const [formData, setFormData] = useState({
     user: "",
@@ -39,7 +43,7 @@ export default function Login() {
     const emptyFields = Object.keys(formData).filter(
       (key) => formData[key].trim() === ""
     );
-
+  
     if (emptyFields.length > 0) {
       const newErrors = {};
       emptyFields.forEach((field) => {
@@ -48,11 +52,36 @@ export default function Login() {
       setErrors(newErrors);
       return;
     }
-
-    // Simulación de inicio de sesión exitoso y redirección al Home
-    console.log("Inicio correcto", formData);
-    router.push("/Home");
+  
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.user,
+          password: formData.password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log("✅ Login exitoso:", data);
+        // Aquí podrías guardar el token en AsyncStorage si deseas
+        // await AsyncStorage.setItem("token", data.access_token);
+        router.push("/Home");
+      } else {
+        console.error("❌ Error de login:", data.message);
+        alert("Credenciales inválidas");
+      }
+    } catch (error) {
+      console.error("❌ Error de red:", error);
+      alert("Error al conectar con el servidor.");
+    }
   };
+  
 
   return (
     <View style={styles.container}>
