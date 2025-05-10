@@ -6,8 +6,10 @@ import Header from "../src/components/Header";
 import { ButtonPrimary } from "../src/components/Button";
 import { ButtonSecondary } from "../src/components/Button";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import iconAdjuntar from "../assets/icons/iconAdjuntar.png";
+import { BackHandler } from "react-native";
+import { useRouter } from "expo-router";
 
 const NewPost = () => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -40,6 +42,23 @@ const NewPost = () => {
   const publicarPost = () => {
     alert("publicar este post");
   };
+
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home");
+      return true; 
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   return (
     <View style={styles.container}>

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  BackHandler,
 } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
@@ -12,6 +13,7 @@ import Header from "../src/components/Header";
 import user from "../assets/images/usuario.png";
 import CustomText from "../src/components/CustomText";
 import Icon from "react-native-vector-icons/Feather";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
@@ -75,6 +77,22 @@ const Profile = () => {
           </View>
         </View>
       );
+
+    const router = useRouter();
+
+    useEffect(() => {
+      const backAction = () => {
+        router.replace('/Home'); // redirige y limpia el historial
+        return true; 
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction
+      );
+
+      return () => backHandler.remove();
+    }, []);
 
   return (
     <View style={styles.container}>
