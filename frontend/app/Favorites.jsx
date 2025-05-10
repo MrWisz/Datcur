@@ -1,8 +1,16 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  BackHandler,
+} from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
 const Favorites = () => {
   const [fontsLoaded] = useFonts({
@@ -10,9 +18,23 @@ const Favorites = () => {
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  const router = useRouter();
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home"); //limpia el historial
+      return true; 
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  if (!fontsLoaded) return <View />; 
 
   const gridItems = Array(6).fill(null);
 

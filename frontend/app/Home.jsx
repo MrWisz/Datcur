@@ -1,9 +1,21 @@
 import React from "react";
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, useState } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  useState,
+  BackHandler,
+  Platform,
+} from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import Post from "../src/components/Post";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 
 const Home = () => {
   const genericImage = require("../assets/images/imagePost.png");
@@ -41,6 +53,24 @@ const Home = () => {
       likes: 9,
     },
   ];
+
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (Platform.OS === "android") {
+          BackHandler.exitApp(); // Cierra la app 
+          return true;
+        }
+        return false;
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [])
+  );
   
   return (
     <View style={styles.container}>
