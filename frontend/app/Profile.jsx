@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   Text,
@@ -15,10 +14,38 @@ import user from "../assets/images/usuario.png";
 import CustomText from "../src/components/CustomText";
 import Icon from "react-native-vector-icons/Feather";
 import { useRouter } from "expo-router";
-import { useEffect } from 'react';
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+
 
 const Profile = () => {
     const genericImage = require("../assets/images/imagePost.png");
+    const [profileUrl, setProfileUrl] = useState(null);
+    const [nombre, setNombre] = useState("Nombre de Usuario");
+    const [gustos, setGustos] = useState([]);
+    const API_URL = Constants.expoConfig.extra.API_URL;
+
+    useEffect(() => {
+  const fetchUserProfile = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    if (!userId) return;
+
+    try {
+      const res = await fetch(`${API_URL}/users/${userId}`);
+      const data = await res.json();
+      setProfileUrl(data.foto_perfil || null);
+      setNombre(data.nombre || "Usuario");
+      setGustos(data.gustos || []);
+    } catch (err) {
+      console.error("Error cargando perfil:", err);
+    }
+  };
+
+  fetchUserProfile();
+}, []);
+
+
     const renderPost = (key) => (
         <View key={key} style={styles.postCard}>
           {/* User Info */}
@@ -73,9 +100,15 @@ const Profile = () => {
         <ScrollView style={styles.scrollView}>
           <View style={styles.rectangle}>
             <Header />
-            <Image source={user} style={[styles.img, { marginTop: "5%" }]} />
-            <CustomText style={styles.title}>Name User</CustomText>
-            <CustomText style={styles.subtitle}>Hello! I like....</CustomText>
+            <Image
+              source={profileUrl ? { uri: profileUrl } : user}
+              style={[styles.img, { marginTop: "5%" }]}
+              resizeMode="cover"
+            />
+           <CustomText style={styles.title}>{nombre}</CustomText>
+            <CustomText style={styles.subtitle}>
+              {gustos.length > 0 ? `Me gusta: ${gustos.join(", ")}` : "¡Aún no has configurado tus gustos!"}
+            </CustomText>
             {renderPost(1)}
             {renderPost(2)}
           </View>

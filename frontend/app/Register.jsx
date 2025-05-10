@@ -11,6 +11,11 @@ import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
 import Head from "../src/components/Head";
 import Toast from "react-native-toast-message";
+import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from 'jwt-decode';
+
+
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -25,6 +30,7 @@ const defaultFormValues = () => ({
 });
 
 export default function Register() {
+  const API_URL = Constants.expoConfig.extra.API_URL;
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormValues());
   const [errors, setErrors] = useState({});
@@ -74,49 +80,95 @@ export default function Register() {
   };
 
   const doRegisterUser = async () => {
-    // Verificamos si hay campos vacíos
-    const emptyFields = Object.keys(formData).filter(
-      (key) => formData[key].trim() === ""
-    );
+  const emptyFields = Object.keys(formData).filter(
+    (key) => formData[key].trim() === ""
+  );
 
-    if (emptyFields.length > 0) {
-      const newErrors = {};
-      emptyFields.forEach((field) => {
-        newErrors[field] = "Este campo es obligatorio.";
-      });
-      setErrors(newErrors);
-      return;
+  if (emptyFields.length > 0) {
+    const newErrors = {};
+    emptyFields.forEach((field) => {
+      newErrors[field] = "Este campo es obligatorio.";
+    });
+    setErrors(newErrors);
+    return;
+  }
+
+  let hasErrors = false;
+  Object.keys(formData).forEach((field) => {
+    validateField(field, formData[field]);
+    if (errors[field]) {
+      hasErrors = true;
     }
+  });
 
-    // Validamos cada campo nuevamente antes de registrar
-    let hasErrors = false;
-    Object.keys(formData).forEach((field) => {
-      validateField(field, formData[field]);
-      if (errors[field]) {
-        hasErrors = true;
-      }
+  if (hasErrors) return;
+
+  try {
+    // 1. Registrar usuario
+    const response = await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: formData.user,
+        nombre: `${formData.name} ${formData.lastName}`,
+        email: formData.email,
+        telefono: formData.phone,
+        direccion: {
+          calle: formData.direction,
+          ciudad: "Ciudad",
+          pais: "País",
+        },
+        gustos: [],
+        foto_perfil: "",
+        password: formData.password,
+        fecha_registro: new Date().toISOString(),
+      }),
     });
 
-    if (hasErrors) {
+    const userData = await response.json();
+
+    if (!response.ok) {
+      alert("Error al registrar usuario: " + userData.message);
       return;
     }
 
+    // 2. Login automático
+    const loginResponse = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: formData.user,
+        password: formData.password,
+      }),
+    });
+
+    const loginData = await loginResponse.json();
+
+    if (!loginResponse.ok) {
+      alert("Registro exitoso, pero error al iniciar sesión.");
+      return;
+    }
+
+    // 3. Guardar en almacenamiento local
+  const payload = jwtDecode(loginData.access_token);
+  await AsyncStorage.setItem("accessToken", loginData.access_token);
+  await AsyncStorage.setItem("userId", payload.sub);
+
+    // 4. Mostrar toast y redirigir
     Toast.show({
       type: "customToast",
       text1: "¡Registro exitoso!",
-      text2: "Tus datos han sido guardados correctamente.",
+      text2: "Sesión iniciada correctamente.",
       visibilityTime: 3000,
     });
 
-    setTimeout(() => {
-      router.push("/UserConfiguration");
-    }, 3000);
+    setTimeout(() => router.push("/UserConfiguration"), 3000);
+  } catch (error) {
+    console.error("❌ Error en registro/login:", error);
+    alert("Error al conectar con el servidor.");
+  }
+};
 
-    // Simulación de registro exitoso
-    console.log("Usuario registrado:", formData);
-    //router.push("/UserConfiguration");
-  };
-  
 
   return (
     <KeyboardAvoidingView

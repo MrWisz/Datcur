@@ -29,13 +29,13 @@ export class User extends Document {
     pais: string;
   };
 
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String], required: false })
   gustos: string[];
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   foto_perfil: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   password_hash: string;
 
   @Prop({ type: [Types.ObjectId], ref: 'Publicacion' })
