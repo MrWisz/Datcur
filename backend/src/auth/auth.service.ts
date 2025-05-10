@@ -27,9 +27,15 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user._id };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  const userId = user._id?.toString?.() || user.userId || user.id;
+
+  if (!userId) {
+    throw new UnauthorizedException('No se pudo obtener el ID del usuario');
   }
+
+  const payload = { username: user.username, sub: userId };
+  return {
+    access_token: this.jwtService.sign(payload),
+  };
+}
 }

@@ -1,6 +1,5 @@
 import {
   StyleSheet,
-  Text,
   View,
   Image,
   TextInput,
@@ -18,95 +17,149 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import Toast from "react-native-toast-message";
+import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = Constants.expoConfig.extra.API_URL;
 
 export default function UserConfiguration() {
-    const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [gustosText, setGustosText] = useState("");
 
-    // Función para abrir la galería
-    const pickImage = async () => {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-      if (!result.canceled) {
-        setSelectedImage(result.assets[0].uri);
-      }
-    };
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
 
-    //Funcion para mostrar mensaje de confirmacion
-    const handlePress = () => {
+ const handlePress = async () => {
+  try {
+    const token = await AsyncStorage.getItem("accessToken");
+    const userId = await AsyncStorage.getItem("userId");
+
+    if (!token || !userId) {
       Toast.show({
-        type: "customToast",
-        text1: "Exito",
-        text2: "¡Tu información ha sido guardada con exito!",
-        visibilityTime: 3000,
-        position: "center",
+        type: "error",
+        text1: "Falta información del usuario",
       });
+      return;
+    }
+
+    if (!selectedImage) {
+      Toast.show({
+        type: "error",
+        text1: "Debes seleccionar una imagen",
+      });
+      return;
+    }
+
+    const gustosArray = gustosText
+      .split("\n")
+      .map((g) => g.trim())
+      .filter((g) => g);
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: selectedImage,
+      name: "profile.jpg",
+      type: "image/jpeg",
+    });
+    formData.append("gustos", JSON.stringify(gustosArray));
+
+    const response = await fetch(`${API_URL}/users/${userId}/configure`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Backend error:", errorText);
+      throw new Error("Error al guardar la configuración");
+    }
+
+    Toast.show({
+      type: "customToast",
+      text1: "Éxito",
+      text2: "¡Tu información ha sido guardada!",
+      visibilityTime: 3000,
+      position: "center",
+    });
 
     setTimeout(() => {
       router.push("/Home");
     }, 3000);
+  } catch (err) {
+    console.error("(NOBRIDGE) ERROR", err);
+    Toast.show({
+      type: "error",
+      text1: "Error al guardar la configuración",
+    });
+  }
+};
 
-  };
-
-    return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.container}>
-              <Header />
-              <CustomText style={styles.title}>
-                ¡Configura tu información personal!
-              </CustomText>
-              <CustomText
-                style={[styles.buttonText, { fontSize: 28, marginTop: "10%" }]}
-              >
-                Foto de perfil
-              </CustomText>
-              <TouchableOpacity onPress={pickImage}>
-                <Image
-                  source={selectedImage ? { uri: selectedImage } : profile}
-                  style={styles.img}
-                />
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.container}>
+            <Header />
+            <CustomText style={styles.title}>
+              ¡Configura tu información personal!
+            </CustomText>
+            <CustomText style={[styles.buttonText, { fontSize: 28, marginTop: "10%" }]}>
+              Foto de perfil
+            </CustomText>
+            <TouchableOpacity onPress={pickImage}>
+              <Image
+                source={selectedImage ? { uri: selectedImage } : profile}
+                style={styles.img}
+              />
+            </TouchableOpacity>
+            <CustomText style={{ textAlign: "center" }}>
+              Añade una foto de perfil
+            </CustomText>
+            <TextInput
+              style={styles.input}
+              placeholder="Escribe aquí tus gustos (uno por línea)"
+              multiline={true}
+              value={gustosText}
+              onChangeText={setGustosText}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.button} onPress={handlePress}>
+                <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
+                  Guardar cambios
+                </CustomText>
               </TouchableOpacity>
-              <CustomText style={{ textAlign: "center" }}>
-                Añade una foto de perfil
-              </CustomText>
-              <TextInput
-                style={styles.input}
-                placeholder="Escribe aquí tus gustos, hobbies y demás información"
-                multiline={true}
-              ></TextInput>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={handlePress}>
-                  <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
-                    Guardar cambios
-                  </CustomText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={() => router.push("/Home")}
-                >
-                  <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
-                    Cancelar
-                  </CustomText>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => router.push("/Home")}
+              >
+                <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
+                  Cancelar
+                </CustomText>
+              </TouchableOpacity>
             </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    );
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  );
 }
-
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -114,10 +167,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-  },
-  inner: {
-    alignItems: "center",
-    paddingBottom: 20,
   },
   title: {
     fontSize: 28,
@@ -164,7 +213,3 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-
-
-
-

@@ -11,17 +11,13 @@ import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
 import Head from "../src/components/Head";
 import { router } from "expo-router";
-//import { useRouter } from "expo-router";
-import { useFonts } from "expo-font";
 import { useState } from "react";
 import Constants from 'expo-constants';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
-
-  //const router = useRouter();
-
-const API_URL = Constants.expoConfig.extra.API_URL;
+  const API_URL = Constants.expoConfig.extra.API_URL;
 
   const [formData, setFormData] = useState({
     user: "",
@@ -33,55 +29,64 @@ const API_URL = Constants.expoConfig.extra.API_URL;
   const onChange = (text, field) => {
     setFormData({ ...formData, [field]: text });
 
-    // Elimina el error si el usuario empieza a escribir
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" });
     }
   };
 
   const initUser = async () => {
-    const emptyFields = Object.keys(formData).filter(
-      (key) => formData[key].trim() === ""
-    );
-  
-    if (emptyFields.length > 0) {
-      const newErrors = {};
-      emptyFields.forEach((field) => {
-        newErrors[field] = "Este campo es obligatorio.";
-      });
-      setErrors(newErrors);
+  const emptyFields = Object.keys(formData).filter(
+    (key) => formData[key].trim() === ""
+  );
+
+  if (emptyFields.length > 0) {
+    const newErrors = {};
+    emptyFields.forEach((field) => {
+      newErrors[field] = "Este campo es obligatorio.";
+    });
+    setErrors(newErrors);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: formData.user,
+        password: formData.password,
+      }),
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error("❌ Error parseando JSON:", jsonError);
+      alert("Error inesperado del servidor.");
       return;
     }
-  
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.user,
-          password: formData.password,
-        }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
-        console.log("✅ Login exitoso:", data);
-        // Aquí podrías guardar el token en AsyncStorage si deseas
-        // await AsyncStorage.setItem("token", data.access_token);
-        router.push("/Home");
-      } else {
-        console.error("❌ Error de login:", data.message);
-        alert("Credenciales inválidas");
-      }
-    } catch (error) {
-      console.error("❌ Error de red:", error);
-      alert("Error al conectar con el servidor.");
+
+    if (response.ok) {
+      console.log("✅ Login exitoso:", data);
+
+      const decoded = jwtDecode(data.access_token);
+      await AsyncStorage.setItem("accessToken", data.access_token);
+      await AsyncStorage.setItem("userId", decoded.sub ?? "");
+
+      router.push("/Home");
+    } else {
+      console.error("❌ Error de login:", data?.message || data);
+      alert(data?.message || "Credenciales inválidas o error del servidor.");
     }
-  };
-  
+  } catch (error) {
+    console.error("❌ Error de red:", error);
+    alert("Error al conectar con el servidor.");
+  }
+};
+
 
   return (
     <View style={styles.container}>

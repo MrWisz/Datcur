@@ -5,24 +5,69 @@ import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>,
+  private readonly cloudinaryService: CloudinaryService,) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
-
-    const createdUser = new this.userModel({
-      ...createUserDto,
-      password_hash: hashedPassword,
-    });
-
-    return createdUser.save();
+  async updatePhoto(userId: string, imageUrl: string) {
+    const secureUrl = await this.cloudinaryService.uploadImage(imageUrl);
+    return this.userModel.findByIdAndUpdate(userId, {
+      foto_perfil: secureUrl,
+    }, { new: true });
   }
 
-  async findAll(): Promise<User[]> {
+  async create(createUserDto: CreateUserDto): Promise<{ userId: string }> {
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+
+  const createdUser = new this.userModel({
+    ...createUserDto,
+    password_hash: hashedPassword,
+  });
+
+  const savedUser = await createdUser.save();
+
+  return { userId: (savedUser._id as Types.ObjectId).toString() };
+}
+
+async configureUser(userId: string, imageBuffer: Buffer, gustos: string[]): Promise<User> {
+  try {
+    console.log('🔧 Iniciando configuración de usuario...');
+    console.log('User ID:', userId);
+    console.log('Gustos:', gustos);
+
+    const secureUrl = await this.cloudinaryService.uploadImageFromBuffer(imageBuffer);
+    console.log('✅ Imagen subida con URL:', secureUrl);
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      userId,
+      {
+        foto_perfil: secureUrl,
+        gustos,
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      console.error('❌ Usuario no encontrado con ID:', userId);
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado`);
+    }
+
+    console.log('✅ Usuario actualizado correctamente');
+    return updatedUser;
+  } catch (error) {
+    console.error("❌ Error en configureUser:", error);
+    throw new InternalServerErrorException('Error al guardar la configuración');
+  }
+}
+
+
+
+async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
 
