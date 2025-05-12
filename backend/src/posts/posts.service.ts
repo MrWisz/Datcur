@@ -1,13 +1,23 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { Express } from 'express';
 
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<Post>,
+    private readonly cloudinaryService: CloudinaryService
+  ) {}
 
   async create(createPostDto: CreatePostDto, usuario_id: string): Promise<Post> {
     try {
@@ -26,9 +36,44 @@ export class PostsService {
     }
   }
 
-  async findAll(): Promise<Post[]> {
-    return this.postModel.find().exec();
+  async createPostWithImages(
+    body: any,
+    images: Express.Multer.File[],
+    usuario_id: string
+  ): Promise<Post> {
+    try {
+      const fotos: string[] = [];
+
+      for (const file of images) {
+        const imageUrl = await this.cloudinaryService.uploadImageFromBuffer(file.buffer);
+        fotos.push(imageUrl);
+      }
+
+      const post = new this.postModel({
+        descripcion: body.descripcion,
+        etiquetas: JSON.parse(body.etiquetas || '[]'),
+        fotos,
+        usuario_id: new Types.ObjectId(usuario_id),
+        fecha_creacion: new Date(),
+        likes: [],
+        comentarios: [],
+        favoritos: [],
+      });
+
+      return await post.save();
+    } catch (err) {
+      console.error('❌ Error al crear el post con imágenes:', err);
+      throw new InternalServerErrorException('No se pudo crear el post');
+    }
   }
+
+  async findAll(): Promise<Post[]> {
+  return this.postModel
+    .find()
+    .populate('usuario_id', 'nombre username foto_perfil') 
+    .exec();
+}
+
 
   async findOne(id: string): Promise<Post> {
     const post = await this.postModel.findById(new Types.ObjectId(id)).exec();

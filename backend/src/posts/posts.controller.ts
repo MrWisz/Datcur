@@ -1,10 +1,24 @@
-import { Controller, Post, Body, Req, UseGuards, Get, Param, Put, Delete, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Get,
+  Param,
+  Put,
+  Delete,
+  UnauthorizedException,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PostsService } from './posts.service';
 import { Post as PostModel } from './schemas/post.schema';
-import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Request } from 'express';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 @Controller('posts')
 @UseGuards(JwtAuthGuard)
@@ -12,12 +26,23 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  async create(@Body() createPostDto: CreatePostDto, @Req() req: Request): Promise<PostModel> {
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 }, // Límite de 5MB por imagen
+    })
+  )
+  async create(
+    @Body() body: any,
+    @UploadedFiles() images: Express.Multer.File[],
+    @Req() req: Request
+  ): Promise<PostModel> {
     const usuario_id = req.user?.['userId'];
     if (!usuario_id) {
       throw new UnauthorizedException('Usuario no autenticado');
     }
-    return this.postsService.create(createPostDto, usuario_id);
+
+    return this.postsService.createPostWithImages(body, images, usuario_id);
   }
 
   @Get()
@@ -31,7 +56,10 @@ export class PostsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto): Promise<PostModel> {
+  async update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto
+  ): Promise<PostModel> {
     return this.postsService.update(id, updatePostDto);
   }
 
