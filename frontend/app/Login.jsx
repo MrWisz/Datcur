@@ -5,16 +5,19 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  BackHandler,
+  Platform,
 } from "react-native";
 import user from "../assets/images/login.png";
 import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
 import Head from "../src/components/Head";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useState } from "react";
 import Constants from 'expo-constants';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from 'jwt-decode';
+import { useCallback } from "react";
 
 export default function Login() {
   const API_URL = Constants.expoConfig.extra.API_URL;
@@ -25,6 +28,23 @@ export default function Login() {
   });
 
   const [errors, setErrors] = useState({});
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (Platform.OS === "android") {
+          BackHandler.exitApp(); // Cierra la app
+          return true;
+        }
+        return false;
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [])
+  );
 
   const onChange = (text, field) => {
     setFormData({ ...formData, [field]: text });
