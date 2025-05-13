@@ -120,13 +120,19 @@ const NewPost = () => {
           Añade descripción de tu publicación
         </Text>
 
-         <TextInput
-          multiline={true}
+        <TextInput
+          multiline
           numberOfLines={5}
-          style={styles.textArea}
-          textAlignVertical="top"
-          placeholder="¿Qué quieres compartir?"
-          placeholderTextColor="#666"
+          value={descripcion}
+          onChangeText={setDescripcion}
+          style={{
+            height: 100,
+            width: "80%",
+            backgroundColor: "#BFEEFE",
+            padding: 10,
+            borderRadius: 10,
+            textAlignVertical: "top",
+          }}
         />
 
         <View style={{ height: 250, width: "80%", marginBottom: 20 }}>
@@ -140,7 +146,7 @@ const NewPost = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 60 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 90 }}>
           <ButtonPrimary content="Publicar" onPress={publicarPost} />
           <ButtonSecondary
             content="Cancelar"
@@ -157,12 +163,6 @@ const NewPost = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  contentArea: {
-    flex: 1,
-    paddingTop: 6,
-    alignItems: "center",
   },
   title: {
     fontFamily: "ComicNeue-Bold",
@@ -178,36 +178,9 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 20,
   },
-  textArea: {
-    height: 100,
-    width: "80%",
-    backgroundColor: "#BFEEFE",
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 16,
-    fontFamily: "ComicNeue",
-    marginBottom: 20,
-    textAlignVertical: "top",
-  },
-  imageContainer: {
-    height: 250,
-    width: "80%",
-    marginBottom: 20,
-  },
-  imageButton: {
+  contentArea: {
     flex: 1,
-    borderRadius: 10,
-    backgroundColor: "#f0f0f0",
-    overflow: "hidden",
-  },
-  selectedImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: "center",
+    paddingTop: 6,
     alignItems: "center",
     paddingBottom: 20,
   },

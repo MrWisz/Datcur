@@ -48,6 +48,8 @@ const Search = () => {
     user.fullName.toLowerCase().includes(searchText.toLowerCase())
   );
 
+    const router = useRouter();
+
   if (!fontsLoaded) {
     return null;
   }
@@ -56,7 +58,7 @@ const Search = () => {
     setSearchText(text);
   };
 
-  const router = useRouter();
+
   
   useEffect(() => {
       const backAction = () => {
