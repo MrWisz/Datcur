@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useFonts } from "expo-font";
+import { useBackToHome } from '../src/utils/navigationUtils';
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 
@@ -9,6 +10,8 @@ const Favorites = () => {
     ComicNeue: require("../assets/fonts/ComicNeue-Regular.ttf"),
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
+
+  useBackToHome();
 
   if (!fontsLoaded) {
     return null;

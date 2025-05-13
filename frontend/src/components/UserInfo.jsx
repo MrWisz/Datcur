@@ -1,41 +1,59 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
+import React from 'react';
+import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import CustomText from './CustomText';
 
-const UserInfo = () => {
-  const styles = StyleSheet.create({
-    userInfo: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 8,
-    },
-    avatar: {
-      width: 32,
-      height: 32,
-      backgroundColor: "#d1d1d1", // gray-300
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: "#a0a0a0", // gray-400
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    username: {
-      marginLeft: 8,
-      width: 96,
-      height: 16,
-      backgroundColor: "#000",
-      borderRadius: 4,
-    },
-  });
-
+const UserInfo = ({ avatar, username, fullName }) => {
   return (
-    <View style={styles.userInfo}>
-      <View style={styles.avatar}>
-        <Icon name="user" size={18} color="#777" />
+    <TouchableOpacity style={styles.container}>
+      <Image
+        source={{ uri: avatar }}
+        style={styles.avatar}
+        defaultSource={require('../../assets/images/usuario.png')}
+      />
+      <View style={styles.textContainer}>
+        <CustomText style={styles.username}>{username}</CustomText>
+        <CustomText style={styles.fullName}>{fullName}</CustomText>
       </View>
-      <View style={styles.username} />
-    </View>
+    </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 16,
+    fontFamily: 'Comic-Bold',
+    marginBottom: 2,
+  },
+  fullName: {
+    fontSize: 14,
+    color: '#666',
+    fontFamily: 'Comic-Neue',
+  },
+});
 
 export default UserInfo;

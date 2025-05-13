@@ -45,12 +45,25 @@ const Home = () => {
   return (
     <View style={styles.container}>
       <Header />
-
       {/* Content Area */}
       <View style={styles.contentArea}>
-        <ScrollView style={styles.scrollView}>
-          {posts.map((item) => (
-            <Post key={item.id} post={item} />
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {posts.map((post, index) => (
+            <Post 
+              key={index} 
+              post={{
+                ...post,
+                likes: post.likes || 0,
+                date: getCurrentDate(),
+                usuario_id: post.usuario_id || "Usuario",
+                userAvatar: post.userAvatar || "https://via.placeholder.com/35",
+                image: post.image || genericImage,
+                description: post.description || ""
+              }} 
+            />
           ))}
         </ScrollView>
       </View>
@@ -64,14 +77,14 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#eee',
   },
   contentArea: {
     flex: 1,
-    paddingTop: 6,
+    paddingHorizontal: 16,
   },
   scrollView: {
     flex: 1,
-    paddingBottom: 10,
   },
   userInfo: {
     flexDirection: "row",

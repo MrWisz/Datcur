@@ -22,7 +22,7 @@ const Header = () => {
     >
       <View style={styles.header}>
         <Logo />
-        <TouchableOpacity onPress={() => router.push("/Config")}>
+        <TouchableOpacity onPress={() => router.replace("/Config")}>
           <Icon style={styles.config} name="settings" size={28} color="#444" />
         </TouchableOpacity>
       </View>
@@ -35,7 +35,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 110,
     justifyContent: "center",
-    marginTop: "6%",
   },
   header: {
     backgroundColor: "transparent",
