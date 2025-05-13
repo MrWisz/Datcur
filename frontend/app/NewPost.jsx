@@ -120,19 +120,13 @@ const NewPost = () => {
           Añade descripción de tu publicación
         </Text>
 
-        <TextInput
-          multiline
+         <TextInput
+          multiline={true}
           numberOfLines={5}
-          value={descripcion}
-          onChangeText={setDescripcion}
-          style={{
-            height: 100,
-            width: "80%",
-            backgroundColor: "#BFEEFE",
-            padding: 10,
-            borderRadius: 10,
-            textAlignVertical: "top",
-          }}
+          style={styles.textArea}
+          textAlignVertical="top"
+          placeholder="¿Qué quieres compartir?"
+          placeholderTextColor="#666"
         />
 
         <View style={{ height: 250, width: "80%", marginBottom: 20 }}>
@@ -146,7 +140,7 @@ const NewPost = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 90 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 60 }}>
           <ButtonPrimary content="Publicar" onPress={publicarPost} />
           <ButtonSecondary
             content="Cancelar"
@@ -185,7 +179,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   textArea: {
-    height: 150,
+    height: 100,
     width: "80%",
     backgroundColor: "#BFEEFE",
     borderRadius: 10,

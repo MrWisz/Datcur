@@ -14,8 +14,6 @@ const Search = () => {
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
-  useBackToHome();
-
   // Lista de usuarios de ejemplo
   const users = [
     {
