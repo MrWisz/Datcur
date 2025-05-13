@@ -7,6 +7,7 @@ import {
   BackHandler,
 } from "react-native";
 import { useFonts } from "expo-font";
+import { useBackToHome } from '../src/utils/navigationUtils';
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import { useRouter } from "expo-router";
@@ -17,6 +18,8 @@ const Favorites = () => {
     ComicNeue: require("../assets/fonts/ComicNeue-Regular.ttf"),
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
+
+  useBackToHome();
 
   const router = useRouter();
 
