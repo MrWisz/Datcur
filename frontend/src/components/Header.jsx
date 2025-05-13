@@ -33,7 +33,7 @@ const Header = () => {
 const styles = StyleSheet.create({
   backgroundImage: {
     width: "100%",
-    height: 110,
+    height: 125,
     justifyContent: "center",
   },
   header: {

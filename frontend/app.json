@@ -1,12 +1,16 @@
 {
   "expo": {
+    "name": "dactur",
+    "slug": "dactur",
+    "version": "1.0.0",
     "extra": {
-      "eas": {
-        "projectId": "dda632b7-0fb6-4e22-9386-f2584a6d0b9c"
-      }
+      "API_URL": "http://192.168.1.106:3000"
     },
     "android": {
       "package": "com.jenniiramirez22.dactur"
+    },
+    "eas": {
+      "projectId": "dda632b7-0fb6-4e22-9386-f2584a6d0b9c"
     }
   }
 }

@@ -11,6 +11,11 @@ import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
 import Head from "../src/components/Head";
 import Toast from "react-native-toast-message";
+import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from 'jwt-decode';
+
+
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -25,6 +30,7 @@ const defaultFormValues = () => ({
 });
 
 export default function Register() {
+  const API_URL = Constants.expoConfig.extra.API_URL;
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(defaultFormValues());
   const [errors, setErrors] = useState({});
@@ -54,7 +60,7 @@ export default function Register() {
           errorMsg = "Ingresa una direccion valida con @";
         break;
       case "user":
-        if (!validateUser(value)) errorMsg = "Ingresa al menos un numero";
+        if (!validateUser(value)) errorMsg = "No dejar espacios en blanco";
         break;
       case "password":
         if (!validatePassword(value))
@@ -74,49 +80,95 @@ export default function Register() {
   };
 
   const doRegisterUser = async () => {
-    // Verificamos si hay campos vacíos
-    const emptyFields = Object.keys(formData).filter(
-      (key) => formData[key].trim() === ""
-    );
+  const emptyFields = Object.keys(formData).filter(
+    (key) => formData[key].trim() === ""
+  );
 
-    if (emptyFields.length > 0) {
-      const newErrors = {};
-      emptyFields.forEach((field) => {
-        newErrors[field] = "Este campo es obligatorio.";
-      });
-      setErrors(newErrors);
-      return;
+  if (emptyFields.length > 0) {
+    const newErrors = {};
+    emptyFields.forEach((field) => {
+      newErrors[field] = "Este campo es obligatorio.";
+    });
+    setErrors(newErrors);
+    return;
+  }
+
+  let hasErrors = false;
+  Object.keys(formData).forEach((field) => {
+    validateField(field, formData[field]);
+    if (errors[field]) {
+      hasErrors = true;
     }
+  });
 
-    // Validamos cada campo nuevamente antes de registrar
-    let hasErrors = false;
-    Object.keys(formData).forEach((field) => {
-      validateField(field, formData[field]);
-      if (errors[field]) {
-        hasErrors = true;
-      }
+  if (hasErrors) return;
+
+  try {
+    // 1. Registrar usuario
+    const response = await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: formData.user,
+        nombre: `${formData.name} ${formData.lastName}`,
+        email: formData.email,
+        telefono: formData.phone,
+        direccion: {
+          calle: formData.direction,
+          ciudad: "Ciudad",
+          pais: "País",
+        },
+        gustos: [],
+        foto_perfil: "",
+        password: formData.password,
+        fecha_registro: new Date().toISOString(),
+      }),
     });
 
-    if (hasErrors) {
+    const userData = await response.json();
+
+    if (!response.ok) {
+      alert("Error al registrar usuario: " + userData.message);
       return;
     }
 
+    // 2. Login automático
+    const loginResponse = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: formData.user,
+        password: formData.password,
+      }),
+    });
+
+    const loginData = await loginResponse.json();
+
+    if (!loginResponse.ok) {
+      alert("Registro exitoso, pero error al iniciar sesión.");
+      return;
+    }
+
+    // 3. Guardar en almacenamiento local
+  const payload = jwtDecode(loginData.access_token);
+  await AsyncStorage.setItem("accessToken", loginData.access_token);
+  await AsyncStorage.setItem("userId", payload.sub);
+
+    // 4. Mostrar toast y redirigir
     Toast.show({
       type: "customToast",
       text1: "¡Registro exitoso!",
-      text2: "Tus datos han sido guardados correctamente.",
+      text2: "Sesión iniciada correctamente.",
       visibilityTime: 3000,
     });
 
-    setTimeout(() => {
-      router.push("/UserConfiguration");
-    }, 3000);
+    setTimeout(() => router.push("/UserConfiguration"), 3000);
+  } catch (error) {
+    console.error("❌ Error en registro/login:", error);
+    alert("Error al conectar con el servidor.");
+  }
+};
 
-    // Simulación de registro exitoso
-    console.log("Usuario registrado:", formData);
-    //router.push("/UserConfiguration");
-  };
-  
 
   return (
     <KeyboardAvoidingView
@@ -128,60 +180,100 @@ export default function Register() {
           <View style={styles.inner}>
             <Head />
             <Image source={logo} style={[styles.img, { marginTop: "25%" }]} />
-            <CustomText style={[styles.buttonText, { fontSize: 30 }]}>
+            <CustomText style={[styles.buttonText, { fontSize: 30, marginBottom: "5%" }]}>
               Registro de usuario
             </CustomText>
 
             {[
-              { field: "name", placeholder: "Nombres" },
-              { field: "lastName", placeholder: "Apellidos" },
-              { field: "direction", placeholder: "Dirección" },
+              {
+                field: "name",
+                placeholder: "Nombres",
+                icon: "account-outline",
+              },
+              {
+                field: "lastName",
+                placeholder: "Apellidos",
+                icon: "account-outline",
+              },
+              {
+                field: "direction",
+                placeholder: "Dirección",
+                icon: "map-marker-outline",
+              },
               {
                 field: "phone",
                 placeholder: "Teléfono",
+                icon: "phone-outline",
                 keyboardType: "phone-pad",
               },
               {
                 field: "email",
                 placeholder: "Correo",
+                icon: "email-outline",
                 keyboardType: "email-address",
               },
-              { field: "user", placeholder: "Usuario" },
-            ].map(({ field, placeholder, keyboardType }) => (
-              <View key={field}>
-                <TextInput
-                  style={[styles.input, { fontFamily: "Comic-Bold" }]}
-                  placeholder={placeholder}
-                  onChangeText={(text) => onChange(text, field)}
-                  value={formData[field]}
-                  keyboardType={keyboardType || "default"}
-                />
-                {errors[field] ? (
-                  <CustomText style={styles.errorText}>
-                    {errors[field]}
-                  </CustomText>
-                ) : null}
-              </View>
-            ))}
-
-            {[
-              { field: "password", placeholder: "Contraseña" },
-              { field: "confirm", placeholder: "Confirmar contraseña" },
-            ].map(({ field, placeholder }) => (
+              {
+                field: "user",
+                placeholder: "Usuario",
+                icon: "account-circle-outline",
+              },
+              {
+                field: "password",
+                placeholder: "Contraseña",
+                icon: "lock-outline",
+                isPassword: true,
+              },
+              {
+                field: "confirm",
+                placeholder: "Confirmar contraseña",
+                icon: "lock-outline",
+                isPassword: true,
+              },
+            ].map(({ field, placeholder, icon, keyboardType, isPassword }) => (
               <View key={field}>
                 <Input
-                  containerStyle={styles.input}
-                  inputStyle={{ fontFamily: "Comic-Bold" }}
                   placeholder={placeholder}
-                  secureTextEntry={!showPassword}
-                  onChangeText={(text) => onChange(text, field)}
                   value={formData[field]}
+                  onChangeText={(text) => onChange(text, field)}
+                  keyboardType={keyboardType || "default"}
+                  secureTextEntry={isPassword ? !showPassword : false}
+                  containerStyle={{ paddingHorizontal: 0, width: 280 }}
+                  inputContainerStyle={{
+                    backgroundColor: "rgba(91, 212, 255, 0.25)",
+                    height: 40,
+                    borderRadius: 50,
+                    paddingLeft: "5%",
+                    paddingRight: 10,
+                    borderBottomWidth: 0,
+                    marginBottom: "-4%",
+                  }}
+                  inputStyle={{ fontFamily: "Comic-Bold", fontSize: 18 }}
+                  leftIcon={{
+                    type: "material-community",
+                    name: icon,
+                    color: "#333",
+                    size: 20,
+                  }}
                   rightIcon={
-                    <Icon
-                      type="material-community"
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
-                      onPress={() => setShowPassword(!showPassword)}
-                    />
+                    isPassword ? (
+                      <TouchableOpacity
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        <Icon
+                          type="material-community"
+                          name={
+                            showPassword ? "eye-off-outline" : "eye-outline"
+                          }
+                          color="#333"
+                          size={20}
+                        />
+                      </TouchableOpacity>
+                    ) : null
+                  }
+                  autoComplete={field === "password" ? "off" : undefined}
+                  autoCorrect={field === "password" ? false : undefined}
+                  textContentType={
+                    field === "password" ? "oneTimeCode" : undefined
                   }
                 />
                 {errors[field] ? (
@@ -223,13 +315,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   inner: {
-    alignItems: "center",
     paddingBottom: 20,
+    alignItems: "stretch",
+    paddingHorizontal: "10%",
   },
   img: {
     width: 100,
     height: 100,
     marginBottom: "3%",
+    alignSelf: "center",
   },
   input: {
     backgroundColor: "rgba(91, 212, 255, 0.25)",
@@ -268,6 +362,9 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 14,
-    marginBottom: 5,
+    marginTop: -5, 
+    marginBottom: 7, 
+    alignSelf: "flex-start", 
+    paddingLeft: 10,
   },
 });

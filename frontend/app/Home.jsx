@@ -1,74 +1,85 @@
-import React from "react";
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, useState } from "react-native";
-import Icon from "react-native-vector-icons/Feather";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  BackHandler,
+  Platform,
+} from "react-native";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import Post from "../src/components/Post";
+import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 const Home = () => {
-  const genericImage = require("../assets/images/imagePost.png");
+  const [posts, setPosts] = useState([]);
+  const API_URL = Constants.expoConfig.extra.API_URL;
 
-  {
-    /*manejo de fecha */
-  }
-  const getCurrentDate = () => {
-    const date = new Date();
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const token = await AsyncStorage.getItem("accessToken");
+      const userId = await AsyncStorage.getItem("userId");
+      if (!token) return;
 
-  const posts = [
-    {
-      id: "1",
-      usuario_id: "Usuario 1",
-      userAvatar:
-        "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg",
-      description: "¡Mi primera publicación!",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/200",
-      likes: 4,
-    },
-    {
-      id: "2",
-      usuario_id: "Usuario 2",
-      userAvatar: "https://cdn-icons-png.freepik.com/512/13135/13135509.png",
-      description: "Hola mundo en Datcur",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/201",
-      likes: 9,
-    },
-  ];
-  
+      try {
+        const response = await fetch(`${API_URL}/posts`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          console.error("❌ La respuesta de /posts no es un array:", data);
+          return;
+        }
+
+        const enrichedPosts = data.map((p) => ({
+          ...p,
+          usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
+          userAvatar: p.usuario_id.foto_perfil || undefined,
+          image: p.fotos?.[0] || undefined,
+          description: p.descripcion,
+          date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+        }));
+
+        setPosts(enrichedPosts);
+      } catch (err) {
+        console.error("Error al cargar publicaciones:", err);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (Platform.OS === "android") {
+          BackHandler.exitApp();
+          return true;
+        }
+        return false;
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <Header />
-      {/* Content Area */}
       <View style={styles.contentArea}>
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          {posts.map((post, index) => (
-            <Post 
-              key={index} 
-              post={{
-                ...post,
-                likes: post.likes || 0,
-                date: getCurrentDate(),
-                usuario_id: post.usuario_id || "Usuario",
-                userAvatar: post.userAvatar || "https://via.placeholder.com/35",
-                image: post.image || genericImage,
-                description: post.description || ""
-              }} 
-            />
+        <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 60 }}>
+          {posts.map((item, i) => (
+            <Post key={i} post={item} />
           ))}
         </ScrollView>
       </View>
-
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </View>
   );

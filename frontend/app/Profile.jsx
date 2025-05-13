@@ -1,77 +1,116 @@
-import React from "react";
 import {
   View,
   Image,
   StyleSheet,
   ScrollView,
+  BackHandler,
 } from "react-native";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import user from "../assets/images/usuario.png";
 import CustomText from "../src/components/CustomText";
-import Icon from "react-native-vector-icons/Feather";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import Post from "../src/components/Post";
-import { useBackToHome } from '../src/utils/navigationUtils';
 
 const Profile = () => {
-  useBackToHome();
+  const [profileUrl, setProfileUrl] = useState(null);
+  const [nombre, setNombre] = useState("Nombre de Usuario");
+  const [gustos, setGustos] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const API_URL = Constants.expoConfig.extra.API_URL;
+  const router = useRouter();
 
-  const genericImage = require("../assets/images/imagePost.png");
-  const userAvatar = "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg";
+  useEffect(() => {
+    const fetchUserData = async () => {
+  const userId = await AsyncStorage.getItem("userId");
+  const token = await AsyncStorage.getItem("accessToken");
+  if (!userId || !token) return;
 
-  const getCurrentDate = () => {
-    const date = new Date();
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  try {
+    const [userRes, postsRes] = await Promise.all([
+      fetch(`${API_URL}/users/${userId}`),
+      fetch(`${API_URL}/posts`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    ]);
 
-  // Datos de ejemplo para los posts del perfil
-  const profilePosts = [
-    {
-      id: "1",
-      usuario_id: "mi_usuario",
-      userAvatar:
-        "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg",
-      description: "¡Mi segunda publicación!",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/200",
-      likes: 6,
-    },
-    {
-      id: "2",
-      usuario_id: "mi_usuario",
-      userAvatar:
-        "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg",
-      description: "¡Mi primera publicación!",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/200",
-      likes: 4,
+    const userData = await userRes.json();
+    setProfileUrl(userData.foto_perfil || null);
+    setNombre(userData.nombre || "Usuario");
+    setGustos(userData.gustos || []);
+
+    const postsData = await postsRes.json();
+
+    if (!Array.isArray(postsData)) {
+      console.error("❌ La respuesta de /posts no es un array:", postsData);
+      return;
     }
-  ];
+
+    const userPosts = postsData
+      .filter((p) => p.usuario_id._id === userId)
+      .map((p) => ({
+        ...p,
+        usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
+        userAvatar: userData.foto_perfil || undefined,
+        image: p.fotos?.[0] || undefined,
+        description: p.descripcion,
+        date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+      }));
+
+    setPosts(userPosts);
+  } catch (err) {
+    console.error("Error cargando perfil o publicaciones:", err);
+  }
+};
+
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home");
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.contentArea}>
-        <ScrollView style={styles.scrollView}>
-        
+        <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 60 }}>
           <View style={styles.rectangle}>
-          <Header />
-            <Image source={user} style={[styles.img, { marginTop: "5%" }]} />
-            <CustomText style={styles.title}>Name User</CustomText>
-            <CustomText style={styles.subtitle}>Hello! I like....</CustomText>
-            <View style={styles.postContainer}>
-            {profilePosts.map((post) => (
-              <Post key={post.id} post={post} />
-            ))}
-            </View>
+            <Header />
+            <Image
+              source={profileUrl ? { uri: profileUrl } : user}
+              style={[styles.img, { marginTop: "5%" }]}
+              resizeMode="cover"
+            />
+            <CustomText style={styles.title}>{nombre}</CustomText>
+            <CustomText style={styles.subtitle}>
+              {gustos.length > 0
+                ? `Me gusta: ${gustos.join(", ")}`
+                : "¡Aún no has configurado tus gustos!"}
+            </CustomText>
           </View>
+
+          {/* Renderiza publicaciones del usuario */}
+          {posts.map((p, i) => (
+            <Post key={i} post={p} />
+          ))}
         </ScrollView>
       </View>
-
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </View>
   );
@@ -86,22 +125,22 @@ const styles = StyleSheet.create({
     paddingTop: 0
   },
   rectangle: {
-    backgroundColor: "rgba(255, 192, 0, 0.2)",
-    width: "100%",
-    height: "28%",
-  },
+  backgroundColor: "rgba(255, 192, 0, 0.2)",
+  width: "100%",
+  paddingBottom: 20,
+  paddingTop: 10,
+  alignItems: "center",
+},
   img: {
     width: 100,
     height: 100,
-    //marginBottom: "3%",
     alignSelf: "center",
+    borderRadius: 50,
   },
   title: {
     fontFamily: "Comic-Bold",
     fontSize: 35,
-    //fontWeight: "bold",
     textAlign: "center",
-    //marginVertical: 10,
   },
   subtitle: {
     fontFamily: "ComicNeue",
@@ -114,7 +153,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollView: {
-    flexGrow:1,
+    flexGrow: 1,
   },
 });
 

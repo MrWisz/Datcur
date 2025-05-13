@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     //height: 250,
     borderRadius: 10,
     marginVertical: 10,
-    height: 200,
+    height: 300,
   },
   interactions: {
     flexDirection: "row",

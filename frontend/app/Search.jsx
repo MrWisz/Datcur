@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, StatusBar, FlatList } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import SearchBar from "../src/components/SearchBar";
 import UserInfo from "../src/components/UserInfo";
-import { useBackToHome } from '../src/utils/navigationUtils';
+import { BackHandler } from "react-native";
+import { useRouter } from "expo-router";
 
 const Search = () => {
   const [searchText, setSearchText] = useState("");
@@ -56,6 +57,22 @@ const Search = () => {
   const handleSearchTextChange = (text) => {
     setSearchText(text);
   };
+
+  const router = useRouter();
+  
+  useEffect(() => {
+      const backAction = () => {
+        router.replace("/Home"); //limpia el historial
+        return true; 
+      };
+  
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        backAction
+      );
+  
+      return () => backHandler.remove();
+  }, []);
 
   const renderUserItem = ({ item }) => (
     <UserInfo

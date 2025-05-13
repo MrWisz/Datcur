@@ -1,17 +1,47 @@
+import { IsEmail, IsNotEmpty, IsString, IsArray, IsDateString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class DireccionDto {
+  @IsString()
+  calle: string;
+
+  @IsString()
+  ciudad: string;
+
+  @IsString()
+  pais: string;
+}
+
 export class CreateUserDto {
-    readonly nombre: string;
-    readonly email: string;
-    readonly telefono: string;
-    readonly direccion: {
-      calle: string;
-      ciudad: string;
-      pais: string;
-    };
-    readonly gustos: string[];
-    readonly foto_perfil: string;
-    readonly password_hash: string;
-    readonly favoritos: string[];
-    readonly seguidores: string[];
-    readonly seguidos: string[];
-    readonly fecha_registro: Date;
-  }
+  @IsNotEmpty()
+  @IsString()
+  readonly username: string;
+
+  @IsNotEmpty()
+  @IsString()
+  nombre: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  telefono: string;
+
+  @ValidateNested()
+  @Type(() => DireccionDto)
+  direccion: DireccionDto;
+
+  @IsArray()
+  @IsString({ each: true })
+  gustos: string[];
+
+  @IsString()
+  foto_perfil: string;
+
+  @IsNotEmpty()
+  @IsString()
+  readonly password: string;
+
+  @IsDateString()
+  fecha_registro: Date;
+}

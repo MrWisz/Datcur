@@ -1,9 +1,17 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  BackHandler,
+} from "react-native";
 import { useFonts } from "expo-font";
 import { useBackToHome } from '../src/utils/navigationUtils';
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
 const Favorites = () => {
   const [fontsLoaded] = useFonts({
@@ -13,9 +21,23 @@ const Favorites = () => {
 
   useBackToHome();
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  const router = useRouter();
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home"); //limpia el historial
+      return true; 
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  if (!fontsLoaded) return <View />; 
 
   const gridItems = Array(6).fill(null);
 
