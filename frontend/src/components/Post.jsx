@@ -45,6 +45,16 @@ export default function Post({ post }) {
     setSaved(!saved);
   };
 
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -52,7 +62,9 @@ export default function Post({ post }) {
         <TouchableOpacity onPress={() => router.push("/ProfileFollower")}>
           <CustomText style={styles.username}>{post.usuario_id}</CustomText>
         </TouchableOpacity>
-        <Text style={styles.date}>{post.date}</Text>
+        <Text style={styles.date}>
+          {formatDate(post.date || post.fecha_creacion)}
+        </Text>
       </View>
       <CustomText style={styles.description}>{post.description}</CustomText>
 

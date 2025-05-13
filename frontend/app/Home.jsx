@@ -6,16 +6,19 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  useState,
   BackHandler,
   Platform,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import Post from "../src/components/Post";
 import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Home = () => {
   const genericImage = require("../assets/images/imagePost.png");
@@ -32,28 +35,57 @@ const Home = () => {
     });
   };
 
-  const posts = [
-    {
-      id: "1",
-      usuario_id: "Usuario 1",
-      userAvatar:
-        "https://i.pinimg.com/474x/ca/ea/07/caea07d30db1356c5ac1576b0fc0ab19.jpg",
-      description: "¡Mi primera publicación!",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/200",
-      likes: 4,
-    },
-    {
-      id: "2",
-      usuario_id: "Usuario 2",
-      userAvatar: "https://cdn-icons-png.freepik.com/512/13135/13135509.png",
-      description: "Hola mundo en Datcur",
-      date: getCurrentDate(),
-      image: "https://picsum.photos/300/201",
-      likes: 9,
-    },
-  ];
 
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 5;
+
+  const fetchPosts = async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+
+      if (!token) {
+        console.warn("No se encontró token de acceso.");
+        return;
+      }
+
+      const response = await axios.get(
+        `http://192.168.1.106:3000/posts?page=${page}&limit=${LIMIT}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const newPosts = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data ?? [];
+
+      console.log("✅ newPosts:", newPosts);
+
+      if (!Array.isArray(newPosts)) {
+        console.error("❌ newPosts no es un array:", newPosts);
+        return;
+      }
+
+      setPosts((prev) => [...prev, ...newPosts]);
+      setHasMore(newPosts.length === LIMIT);
+      setPage((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error al obtener posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts(); 
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,18 +103,26 @@ const Home = () => {
         BackHandler.removeEventListener("hardwareBackPress", onBackPress);
     }, [])
   );
+
+  const renderFooter = () =>
+    loading ? (
+      <ActivityIndicator size="large" style={{ marginVertical: 16 }} />
+    ) : null;
   
   return (
     <View style={styles.container}>
       <Header />
 
-      {/* Content Area */}
       <View style={styles.contentArea}>
-        <ScrollView style={styles.scrollView}>
-          {posts.map((item) => (
-            <Post key={item.id} post={item} />
-          ))}
-        </ScrollView>
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <Post post={item} />}
+          onEndReached={fetchPosts}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
+          contentContainerStyle={{ paddingBottom: 80 }}
+        />
       </View>
 
       {/* Bottom Navigation */}

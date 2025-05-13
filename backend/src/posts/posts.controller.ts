@@ -5,6 +5,7 @@ import { Post as PostModel } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Request } from 'express';
+import { Query } from '@nestjs/common';
 
 @Controller('posts')
 @UseGuards(JwtAuthGuard)
@@ -12,7 +13,10 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  async create(@Body() createPostDto: CreatePostDto, @Req() req: Request): Promise<PostModel> {
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @Req() req: Request,
+  ): Promise<PostModel> {
     const usuario_id = req.user?.['userId'];
     if (!usuario_id) {
       throw new UnauthorizedException('Usuario no autenticado');
@@ -21,8 +25,16 @@ export class PostsController {
   }
 
   @Get()
-  async findAll(): Promise<PostModel[]> {
-    return this.postsService.findAll();
+  async getPaginatedPosts(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<{
+    data: PostModel[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    return this.postsService.getPaginatedPosts(+page, +limit);
   }
 
   @Get(':id')
@@ -31,7 +43,10 @@ export class PostsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto): Promise<PostModel> {
+  async update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ): Promise<PostModel> {
     return this.postsService.update(id, updatePostDto);
   }
 
