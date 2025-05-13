@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, StatusBar } from "react-native";
+import { View, StyleSheet, StatusBar, FlatList } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import SearchBar from "../src/components/SearchBar";
@@ -8,22 +8,57 @@ import { BackHandler } from "react-native";
 import { useRouter } from "expo-router";
 
 const Search = () => {
-  const [searchText, setSearchText] = useState(""); // Estado para manejar el texto del buscador
+  const [searchText, setSearchText] = useState("");
   const [fontsLoaded] = useFonts({
     ComicNeue: require("../assets/fonts/ComicNeue-Regular.ttf"),
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
+  // Lista de usuarios de ejemplo
+  const users = [
+    {
+      id: "1",
+      username: "joana_doe22",
+      fullName: "Joana Doe",
+      avatar: "https://picsum.photos/200",
+    },
+    {
+      id: "2",
+      username: "karina_smith1",
+      fullName: "Karina Smith",
+      avatar: "https://picsum.photos/201",
+    },
+    {
+      id: "3",
+      username: "robert_perez",
+      fullName: "Robert Perez",
+      avatar: "https://picsum.photos/202",
+    },
+    {
+      id: "4",
+      username: "maria_garcia",
+      fullName: "Maria Garcia",
+      avatar: "https://picsum.photos/203",
+    },
+  ];
+
+  // Filtrar usuarios basado en el texto de búsqueda
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(searchText.toLowerCase()) ||
+    user.fullName.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+    const router = useRouter();
+
   if (!fontsLoaded) {
     return null;
   }
 
-  // Función para manejar los cambios en el input de búsqueda
   const handleSearchTextChange = (text) => {
     setSearchText(text);
   };
 
-  const router = useRouter();
+
   
   useEffect(() => {
       const backAction = () => {
@@ -39,30 +74,31 @@ const Search = () => {
       return () => backHandler.remove();
   }, []);
 
+  const renderUserItem = ({ item }) => (
+    <UserInfo
+      avatar={item.avatar}
+      username={item.username}
+      fullName={item.fullName}
+    />
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-
-      {/* Content Area */}
       <View style={styles.contentArea}>
         <SearchBar
-          value={searchText} // Se enlaza el estado al valor del SearchBar
+          value={searchText}
+          onChangeText={handleSearchTextChange}
           placeholder="Buscar usuarios..."
-          onChangeText={handleSearchTextChange} // Se ejecuta cuando cambia el texto
         />
-
-        {/* Mostrar u ocultar la lista dependiendo de si hay texto en la búsqueda */}
-        {searchText.trim() !== "" && (
-          <View style={styles.resultView}>
-            <UserInfo />
-            <UserInfo />
-            <UserInfo />
-            <UserInfo />
-          </View>
-        )}
+        <FlatList
+          data={filteredUsers}
+          renderItem={renderUserItem}
+          keyExtractor={item => item.id}
+          style={styles.userList}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
-
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </View>
   );
@@ -70,36 +106,17 @@ const Search = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 30,
     flex: 1,
-  },
-  title: {
-    fontFamily: "ComicNeue-Bold",
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 10,
-  },
-  subtitle: {
-    fontFamily: "ComicNeue",
-    fontSize: 16,
-    textAlign: "center",
-    color: "#666",
-    marginBottom: 20,
+    backgroundColor: "#eee",
   },
   contentArea: {
     flex: 1,
-    paddingTop: 6,
-    alignItems: "center",
+    paddingTop: 10,
   },
-  resultView: {
+  userList: {
     flex: 1,
-    width: "90%",
-    alignItems: "flex-start",
-    backgroundColor: "#DFF6FF",
-    padding: 20,
-    borderRadius: 10,
-  },
+    paddingHorizontal: 16,
+  }
 });
 
 export default Search;

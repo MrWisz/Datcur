@@ -15,13 +15,15 @@ export default function Head() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: "2%",
+    top: 0,
+    left: 0,
+    right: 0,
     width: "100%",
     height: 130,
+    zIndex: 1,
   },
   img: {
     width: width,
     height: "100%",
   },
 });
-

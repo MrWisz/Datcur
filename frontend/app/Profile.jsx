@@ -1,12 +1,10 @@
 import {
   View,
-  Text,
   Image,
   StyleSheet,
   ScrollView,
   BackHandler,
 } from "react-native";
-import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
 import user from "../assets/images/usuario.png";
@@ -55,6 +53,7 @@ const Profile = () => {
 
     const userPosts = postsData
       .filter((p) => p.usuario_id._id === userId)
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion))
       .map((p) => ({
         ...p,
         usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
@@ -121,6 +120,10 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  postContainer:{
+    padding: 16,
+    paddingTop: 0
   },
   rectangle: {
   backgroundColor: "rgba(255, 192, 0, 0.2)",

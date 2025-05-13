@@ -8,7 +8,7 @@ const BottomNavigation = () => {
       <TouchableOpacity>
         <Icon
           name="star"
-          onPress={() => router.push("/Favorites")}
+          onPress={() => router.replace("/Favorites")}
           size={32}
           color="#000"
         />
@@ -17,13 +17,13 @@ const BottomNavigation = () => {
       <TouchableOpacity>
         <Icon
           name="search"
-          onPress={() => router.push("/Search")}
+          onPress={() => router.replace("/Search")}
           size={32}
           color="#000"
         />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/Home")}>
+      <TouchableOpacity onPress={() => router.replace("/Home")}>
         <Icon name="home" size={32} color="#000" />
       </TouchableOpacity>
 
@@ -39,7 +39,7 @@ const BottomNavigation = () => {
       <TouchableOpacity>
         <Icon
           name="user"
-          onPress={() => router.push("/Profile")}
+          onPress={() => router.replace("/Profile")}
           size={32}
           color="#000"
         />
