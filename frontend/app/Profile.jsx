@@ -53,6 +53,7 @@ const Profile = () => {
 
     const userPosts = postsData
       .filter((p) => p.usuario_id._id === userId)
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion))
       .map((p) => ({
         ...p,
         usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",

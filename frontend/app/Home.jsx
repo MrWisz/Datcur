@@ -37,14 +37,16 @@ const Home = () => {
           return;
         }
 
-        const enrichedPosts = data.map((p) => ({
-          ...p,
-          usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
-          userAvatar: p.usuario_id.foto_perfil || undefined,
-          image: p.fotos?.[0] || undefined,
-          description: p.descripcion,
-          date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
-        }));
+       const enrichedPosts = data
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)) 
+      .map((p) => ({
+        ...p,
+        usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
+        userAvatar: p.usuario_id.foto_perfil || undefined,
+        image: p.fotos?.[0] || undefined,
+        description: p.descripcion,
+        date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+      }));
 
         setPosts(enrichedPosts);
       } catch (err) {
@@ -96,6 +98,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingBottom: 10,
   },
   userInfo: {
     flexDirection: "row",
