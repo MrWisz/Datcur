@@ -23,19 +23,6 @@ export default function ChangeInPersonal() {
     email: "usuario@email.com",
   });
 
-  const [editing, setEditing] = useState({
-    direction: false,
-    phone: false,
-    email: false,
-  });
-
-  const handleToggleEdit = (field) => {
-    if (editing[field]) {
-      console.log(`Guardado ${field}:`, formData[field]);
-    }
-    setEditing((prev) => ({ ...prev, [field]: !prev[field] }));
-  };
-
   const handleChange = (text, field) => {
     setFormData((prev) => ({ ...prev, [field]: text }));
   };
@@ -92,16 +79,9 @@ export default function ChangeInPersonal() {
                       style={styles.input}
                       value={formData[field]}
                       onChangeText={(text) => handleChange(text, field)}
-                      editable={editing[field]}
+                      editable={true}
                       keyboardType={keyboardTypes[field] || "default"}
                     />
-                    <TouchableOpacity onPress={() => handleToggleEdit(field)}>
-                      <MaterialIcons
-                        name={editing[field] ? "check" : "edit"}
-                        size={22}
-                        color="#000"
-                      />
-                    </TouchableOpacity>
                   </View>
                 </View>
               );

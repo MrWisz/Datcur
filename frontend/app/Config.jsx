@@ -1,10 +1,11 @@
-import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Alert, BackHandler } from "react-native";
 import { useFonts } from "expo-font";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
-import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 export default function Config() {
   const [fontsLoaded] = useFonts({
@@ -12,16 +13,38 @@ export default function Config() {
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
+  const router = useRouter(); // ✅ Antes de cualquier hook o lógica
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home");
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
   if (!fontsLoaded) {
     return null;
   }
+
+  const cerrarSesion = async () => {
+    await AsyncStorage.removeItem("accessToken");
+    await AsyncStorage.removeItem("userId");
+    router.replace("/Login");
+  };
 
   const handleLogout = () => {
     Alert.alert(
       "Cerrar sesión",
       "¿Estás seguro de que deseas salir?",
       [
-        { text: "Si", onPress: () => router.push("/Login") },
+        { text: "Si", onPress: cerrarSesion },
         { text: "Cancelar", style: "cancel" },
       ],
       { cancelable: true }
@@ -76,8 +99,6 @@ const MenuItem = ({ icon, text, noIcon = false, onPress }) => {
   );
 };
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -100,5 +121,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
-//export default Config;

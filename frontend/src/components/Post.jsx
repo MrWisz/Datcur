@@ -49,7 +49,7 @@ export default function Post({ post }) {
     <View style={styles.card}>
       <View style={styles.header}>
         <Image source={{ uri: post.userAvatar }} style={styles.avatar} />
-        <TouchableOpacity onPress={() => router.push("/ProfileFollower")}>
+        <TouchableOpacity onPress={() => router.replace("/ProfileFollower")}>
           <CustomText style={styles.username}>{post.usuario_id}</CustomText>
         </TouchableOpacity>
         <Text style={styles.date}>{post.date}</Text>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     //height: 250,
     borderRadius: 10,
     marginVertical: 10,
-    height: 200,
+    height: 300,
   },
   interactions: {
     flexDirection: "row",
