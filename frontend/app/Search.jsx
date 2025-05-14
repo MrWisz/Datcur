@@ -120,3 +120,4 @@ const styles = StyleSheet.create({
 });
 
 export default Search;
+//realice la barra de buscar
