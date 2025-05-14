@@ -2,16 +2,17 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
+import { TokensModule } from './tokens/tokens.module';
 import { AuthModule } from './auth/auth.module';
+import { LikesModule } from './likes/likes.module'; // Importar LikesModule
+import { FavoritesModule } from './favorites/favorites.module'; // Importar FavoritesModule
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Connection } from 'mongoose';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGODB_URI as string, {
+    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/defaultdb', {
       connectionFactory: (connection: Connection) => {
         connection.once('open', () => {
           console.log('Connected to MongoDB Atlas');
@@ -24,7 +25,10 @@ import { ConfigModule } from '@nestjs/config';
     }),
     UsersModule,
     PostsModule,
+    TokensModule,
     AuthModule,
+    LikesModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
