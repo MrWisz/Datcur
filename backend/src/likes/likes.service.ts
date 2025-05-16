@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Like } from './schemas/like.schema';
+import { Like } from './schema/like.schema';
 
 @Injectable()
 export class LikesService {
@@ -12,7 +12,7 @@ export class LikesService {
     return like.save();
   }
 
-  async removeLike(id: string): Promise<Like> {
+  async removeLike(id: string): Promise<Like | null> {
     return this.likeModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
   }
 }

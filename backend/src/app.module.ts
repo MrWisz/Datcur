@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
-import { TokensModule } from './tokens/tokens.module';
 import { AuthModule } from './auth/auth.module';
 import { LikesModule } from './likes/likes.module'; // Importar LikesModule
 import { FavoritesModule } from './favorites/favorites.module'; // Importar FavoritesModule
@@ -12,7 +11,7 @@ import { Connection } from 'mongoose';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/defaultdb', {
+    MongooseModule.forRoot(process.env.MONGODB_URI as string, {
       connectionFactory: (connection: Connection) => {
         connection.once('open', () => {
           console.log('Connected to MongoDB Atlas');
@@ -25,7 +24,6 @@ import { Connection } from 'mongoose';
     }),
     UsersModule,
     PostsModule,
-    TokensModule,
     AuthModule,
     LikesModule,
     FavoritesModule,

@@ -12,7 +12,7 @@ export class FavoritesService {
     return favorite.save();
   }
 
-  async removeFavorite(id: string): Promise<Favorite> {
+  async removeFavorite(id: string): Promise<Favorite | null> {
     return this.favoriteModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
   }
 }
