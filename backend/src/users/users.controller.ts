@@ -87,10 +87,9 @@ export class UsersController {
   ): Promise<User> {
     const gustos = JSON.parse(gustosJson);
     const updated = await this.usersService.configureUser(id, file.buffer, gustos);
-    return updated as User; // ✅ Confirma que nunca retorna null
+    return updated as User; 
   }
 
-  // Puedes dejar este endpoint si aún lo usas en otro flujo
   @UseGuards(JwtAuthGuard)
   @Post(':id/upload-photo')
   @UseInterceptors(FileInterceptor('file'))

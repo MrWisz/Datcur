@@ -12,16 +12,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const users_module_1 = require("./users/users.module");
 const posts_module_1 = require("./posts/posts.module");
 const auth_module_1 = require("./auth/auth.module");
+const likes_module_1 = require("./likes/likes.module");
+const favorites_module_1 = require("./favorites/favorites.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
-const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
             mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI, {
                 connectionFactory: (connection) => {
                     connection.once('open', () => {
@@ -36,6 +36,8 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             posts_module_1.PostsModule,
             auth_module_1.AuthModule,
+            likes_module_1.LikesModule,
+            favorites_module_1.FavoritesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
