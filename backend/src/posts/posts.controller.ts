@@ -45,10 +45,12 @@ export class PostsController {
     return this.postsService.createPostWithImages(body, images, usuario_id);
   }
 
-  @Get()
-  async findAll(): Promise<PostModel[]> {
-    return this.postsService.findAll();
-  }
+@Get()
+async findAll(@Req() req: Request): Promise<any[]> {
+  const userId = req.user?.['userId'];
+  return this.postsService.findAllWithLikedFlag(userId);
+}
+
 
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<PostModel> {

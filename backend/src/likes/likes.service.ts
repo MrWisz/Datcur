@@ -42,4 +42,11 @@ export class LikesService {
 
     return this.likeModel.findByIdAndDelete(id).exec();
   }
+
+  async findLikeByUserAndPost(userId: string, postId: string): Promise<Like | null> {
+  return this.likeModel.findOne({
+    userId: new Types.ObjectId(userId),
+    postId: new Types.ObjectId(postId),
+  }).exec();
+}
 }
