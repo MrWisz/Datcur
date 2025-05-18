@@ -126,4 +126,18 @@ export class PostsService {
     );
     return post.save();
   }
+
+  async findAllWithLikedFlag(userId: string): Promise<any[]> {
+  const posts = await this.postModel
+    .find()
+    .populate('usuario_id')
+    .lean(); // convierte a objetos JS puros
+
+  return posts.map((post) => ({
+    ...post,
+    liked: post.likes?.some((id) => id.toString() === userId),
+  }));
+}
+
+
 }

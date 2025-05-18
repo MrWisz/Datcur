@@ -49,16 +49,3 @@ const styles = StyleSheet.create({
 });
 
 export default CustomToast;
-
-
-/*
-toastContainer: {
-    width: 250,
-    padding: 20,
-    backgroundColor: "#5BD4FF",
-    borderRadius: 10,
-    alignItems: "center",
-    alignContent: "center",
-    alignSelf: "center",
-    flexGrow: 1,
-  }, */

@@ -11,3 +11,5 @@ export class Like extends Document {
 }
 
 export const LikeSchema = SchemaFactory.createForClass(Like);
+
+LikeSchema.index({ userId: 1, postId: 1 }, { unique: true });
