@@ -46,7 +46,7 @@ const Profile = () => {
     const postsData = await postsRes.json();
 
     if (!Array.isArray(postsData)) {
-      console.error("❌ La respuesta de /posts no es un array:", postsData);
+      console.error("La respuesta de /posts no es un array:", postsData);
       return;
     }
 
@@ -62,6 +62,7 @@ const Profile = () => {
         date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
         likes: p.likes?.length || 0, // número, no array
         liked: p.likes?.some((id) => id === userId),
+        favorito: p.favoritos?.some((id) => id === userId),
       }));
 
     setPosts(userPosts);
