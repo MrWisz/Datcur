@@ -46,7 +46,7 @@ const Profile = () => {
     const postsData = await postsRes.json();
 
     if (!Array.isArray(postsData)) {
-      console.error("❌ La respuesta de /posts no es un array:", postsData);
+      console.error("La respuesta de /posts no es un array:", postsData);
       return;
     }
 

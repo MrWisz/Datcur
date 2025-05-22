@@ -70,15 +70,15 @@ const Favorites = () => {
       const data = await res.json();
 
       if (!Array.isArray(data)) {
-        console.error("❌ No se recibió un array de favoritos:", data);
+        console.error("No se recibió un array de favoritos:", data);
         return;
       }
 
-      // ✅ Extraer el post poblado
+      // Extraer el post poblado
       const extractedPosts = data
         .filter((fav) => fav.postId && fav.postId.fotos?.[0])
         .map((fav) => ({
-          key: fav._id, // ✅ clave única del favorito
+          key: fav._id, // clave única del favorito
           postId: fav.postId._id,
           image: fav.postId.fotos[0],
         }));
@@ -109,7 +109,7 @@ const Favorites = () => {
       <View style={styles.gridContainer}>
         {favorites.map((post) => (
           <TouchableOpacity
-            key={post.key} // ✅ ahora la key es única por documento de favorito
+            key={post.key} // ahora la key es única por documento de favorito
             style={styles.gridItem}
             onPress={() => console.log(`Pressed post ${post.postId}`)}
           >

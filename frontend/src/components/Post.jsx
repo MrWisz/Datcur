@@ -97,7 +97,7 @@ export default function Post({ post }) {
       }
     }
   } catch (error) {
-    console.error("❌ Error en toggleLike:", error);
+    console.error("Error en toggleLike:", error);
     Toast.show({
       type: "error",
       text1: "Error inesperado",
@@ -145,7 +145,7 @@ const toggleSave = async () => {
         });
       }
     } else {
-      // ❌ Buscar favorito actual y eliminarlo
+      // Buscar favorito actual y eliminarlo
       const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
         headers,
       });
@@ -182,7 +182,7 @@ const toggleSave = async () => {
       }
     }
   } catch (error) {
-    console.error("❌ Error en toggleSave:", error);
+    console.error("Error en toggleSave:", error);
     Toast.show({
       type: "error",
       text1: "Error inesperado al marcar favorito",

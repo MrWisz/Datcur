@@ -33,7 +33,7 @@ const Home = () => {
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-          console.error("❌ La respuesta de /posts no es un array:", data);
+          console.error("La respuesta de /posts no es un array:", data);
           return;
         }
 
