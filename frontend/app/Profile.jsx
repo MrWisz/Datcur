@@ -62,6 +62,7 @@ const Profile = () => {
         date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
         likes: p.likes?.length || 0, // número, no array
         liked: p.likes?.some((id) => id === userId),
+        favorito: p.favoritos?.some((id) => id === userId),
       }));
 
     setPosts(userPosts);

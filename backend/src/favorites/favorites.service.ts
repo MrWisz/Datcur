@@ -2,15 +2,40 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Favorite } from './schemas/favorite.schema';
+import { Post } from '../posts/schemas/post.schema';
+
 
 @Injectable()
 export class FavoritesService {
-  constructor(@InjectModel(Favorite.name) private favoriteModel: Model<Favorite>) {}
+  constructor(
+  @InjectModel(Favorite.name) private favoriteModel: Model<Favorite>,
+  @InjectModel(Post.name) private postModel: Model<Post> 
+) {}
 
-  async addFavorite(userId: string, postId: string): Promise<Favorite> {
-    const favorite = new this.favoriteModel({ userId: new Types.ObjectId(userId), postId: new Types.ObjectId(postId) });
-    return favorite.save();
-  }
+
+async addFavorite(userId: string, postId: string): Promise<Favorite> {
+  const existing = await this.favoriteModel.findOne({
+    userId: new Types.ObjectId(userId),
+    postId: new Types.ObjectId(postId),
+  });
+
+  if (existing) return existing;
+
+  const favorite = new this.favoriteModel({
+    userId: new Types.ObjectId(userId),
+    postId: new Types.ObjectId(postId),
+  });
+
+  const savedFavorite = await favorite.save();
+
+  await this.postModel.updateOne(
+    { _id: postId },
+    { $addToSet: { favoritos: userId } },
+    { bypassDocumentValidation: true }
+  );
+
+  return savedFavorite;
+}
 
   async removeFavorite(id: string): Promise<Favorite | null> {
     return this.favoriteModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
@@ -21,6 +46,8 @@ export class FavoritesService {
   }
 
   async findAllByUserId(userId: string): Promise<Favorite[]> {
-    return this.favoriteModel.find({ userId: new Types.ObjectId(userId) }).exec();
+    return this.favoriteModel.find({ userId: new Types.ObjectId(userId) })
+    .populate('postId')
+    .exec();
   }
 }
