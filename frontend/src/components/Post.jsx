@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,16 +11,187 @@ import Icon from "react-native-vector-icons/Feather";
 import CustomText from "./CustomText";
 import Toast from "react-native-toast-message";
 import { router } from "expo-router";
-
+import { API_URL } from '@env';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Post({ post }) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(post.favorito || false);
+
+
+  useEffect(() => {
+    if (typeof post.favorito === "boolean") {
+      setSaved(post.favorito);
+    }
+  }, [post.favorito]);
+
+
   {/*para los me gusta */}
-  const toggleLike = () => {
-    setLiked(!liked);
-    setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
+ const toggleLike = async () => {
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("accessToken");
+
+    if (!userId || !token) {
+      Toast.show({ type: "error", text1: "Sesión no válida" });
+      return;
+    }
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+
+    if (!liked) {
+      const res = await fetch(`${API_URL}/likes`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ userId, postId: post._id }),
+      });
+
+      if (res.ok) {
+        setLiked(true);
+        setLikesCount((prev) => prev + 1);
+        Toast.show({
+          type: "customToast",
+          text1: "Te gustó esta publicación ❤️",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error al dar like",
+        });
+      }
+    } else {
+      const resLike = await fetch(
+        `${API_URL}/likes/by-user/${userId}/post/${post._id}`,
+        { headers }
+      );
+
+      const like = await resLike.json();
+
+      if (like?._id) {
+        const res = await fetch(`${API_URL}/likes/${like._id}`, {
+          method: "DELETE",
+          headers,
+        });
+
+        if (res.ok) {
+          setLiked(false);
+          setLikesCount((prev) => Math.max(prev - 1, 0));
+          Toast.show({
+            type: "customToast",
+            text1: "Ya no te gusta esta publicación",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Error al quitar like",
+          });
+        }
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "No tienes like en esta publicación",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error en toggleLike:", error);
+    Toast.show({
+      type: "error",
+      text1: "Error inesperado",
+    });
+  }
+};
+
+const toggleSave = async () => {
+  try {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("accessToken");
+
+    if (!userId || !token) {
+      Toast.show({
+        type: "customToast",
+        text1: "Sesión no válida",
+      });
+      return;
+    }
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+
+    if (!saved) {
+      // ➕ Agregar a favoritos
+      const res = await fetch(`${API_URL}/favorites`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ userId, postId: post._id }),
+      });
+
+      if (res.ok) {
+        setSaved(true);
+        Toast.show({
+          type: "customToast",
+          text1: "Guardado",
+          text2: "Publicación agregada a favoritos 💛",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error al guardar favorito",
+        });
+      }
+    } else {
+      // Buscar favorito actual y eliminarlo
+      const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
+        headers,
+      });
+      const favorites = await resList.json();
+
+      const favorite = favorites.find(
+        (f) => f.postId._id === post._id || f.postId === post._id
+      );
+
+      if (favorite?._id) {
+        const resDelete = await fetch(`${API_URL}/favorites/${favorite._id}`, {
+          method: "DELETE",
+          headers,
+        });
+
+        if (resDelete.ok) {
+          setSaved(false);
+          Toast.show({
+            type: "customToast",
+            text1: "Favorito eliminado",
+            text2: "Quitaste esta publicación de favoritos 💔",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Error al quitar favorito",
+          });
+        }
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "Esta publicación no está en favoritos",
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error en toggleSave:", error);
+    Toast.show({
+      type: "error",
+      text1: "Error inesperado al marcar favorito",
+    });
+  }
+};
+
+
+
   {/*para los comentarios */}
   const [showComments, setShowComments] = useState(false);
   
@@ -41,9 +212,9 @@ export default function Post({ post }) {
   };
 
   {/*para guardar los fav */}
-  const toggleSave = () => {
-    setSaved(!saved);
-  };
+  // const toggleSave = () => {
+  //   setSaved(!saved);
+  // };
 
   return (
     <View style={styles.card}>
@@ -75,6 +246,7 @@ export default function Post({ post }) {
         <TouchableOpacity onPress={toggleSave} style={styles.actionBtn}>
           <Icon name="star" size={20} color={saved ? "#FFC107" : "#333"} />
         </TouchableOpacity>
+
       </View>
       {showComments && (
         <View style={styles.commentBox}>

@@ -12,7 +12,7 @@ import CustomText from "../src/components/CustomText";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Constants from "expo-constants";
+import { API_URL } from '@env';
 import Post from "../src/components/Post";
 
 const Profile = () => {
@@ -20,7 +20,6 @@ const Profile = () => {
   const [nombre, setNombre] = useState("Nombre de Usuario");
   const [gustos, setGustos] = useState([]);
   const [posts, setPosts] = useState([]);
-  const API_URL = Constants.expoConfig.extra.API_URL;
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +46,7 @@ const Profile = () => {
     const postsData = await postsRes.json();
 
     if (!Array.isArray(postsData)) {
-      console.error("❌ La respuesta de /posts no es un array:", postsData);
+      console.error("La respuesta de /posts no es un array:", postsData);
       return;
     }
 
@@ -61,6 +60,9 @@ const Profile = () => {
         image: p.fotos?.[0] || undefined,
         description: p.descripcion,
         date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+        likes: p.likes?.length || 0, // número, no array
+        liked: p.likes?.some((id) => id === userId),
+        favorito: p.favoritos?.some((id) => id === userId),
       }));
 
     setPosts(userPosts);

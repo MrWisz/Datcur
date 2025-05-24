@@ -33,7 +33,7 @@ const Home = () => {
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-          console.error("❌ La respuesta de /posts no es un array:", data);
+          console.error("La respuesta de /posts no es un array:", data);
           return;
         }
 
@@ -46,6 +46,9 @@ const Home = () => {
         image: p.fotos?.[0] || undefined,
         description: p.descripcion,
         date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+        likes: p.likes?.length || 0, // número, no array
+        liked: p.likes?.some((id) => id === userId),
+        favorito: p.favoritos?.some((id) => id === userId),
       }));
 
         setPosts(enrichedPosts);
