@@ -8,6 +8,7 @@ import { FavoritesModule } from './favorites/favorites.module'; // Importar Favo
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Connection } from 'mongoose';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { Connection } from 'mongoose';
     AuthModule,
     LikesModule,
     FavoritesModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
