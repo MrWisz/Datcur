@@ -14,9 +14,9 @@ import CustomText from "../src/components/CustomText";
 import Head from "../src/components/Head";
 import { router, useFocusEffect } from "expo-router";
 import { useState } from "react";
-import Constants from 'expo-constants';
+import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 import { useCallback } from "react";
 
 export default function Login() {
@@ -55,58 +55,58 @@ export default function Login() {
   };
 
   const initUser = async () => {
-  const emptyFields = Object.keys(formData).filter(
-    (key) => formData[key].trim() === ""
-  );
+    const emptyFields = Object.keys(formData).filter(
+      (key) => formData[key].trim() === ""
+    );
 
-  if (emptyFields.length > 0) {
-    const newErrors = {};
-    emptyFields.forEach((field) => {
-      newErrors[field] = "Este campo es obligatorio.";
-    });
-    setErrors(newErrors);
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: formData.user,
-        password: formData.password,
-      }),
-    });
-
-    let data;
-    try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.error("❌ Error parseando JSON:", jsonError);
-      alert("Error inesperado del servidor.");
+    if (emptyFields.length > 0) {
+      const newErrors = {};
+      emptyFields.forEach((field) => {
+        newErrors[field] = "Este campo es obligatorio.";
+      });
+      setErrors(newErrors);
       return;
     }
 
-    if (response.ok) {
-      console.log("✅ Login exitoso:", data);
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.user,
+          password: formData.password,
+        }),
+      });
 
-      const decoded = jwtDecode(data.access_token);
-      await AsyncStorage.setItem("accessToken", data.access_token);
-      await AsyncStorage.setItem("userId", decoded.sub ?? "");
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("❌ Error parseando JSON:", jsonError);
+        alert("Error inesperado del servidor.");
+        return;
+      }
 
-      router.push("/Home");
-    } else {
-      console.error("❌ Error de login:", data?.message || data);
-      alert(data?.message || "Credenciales inválidas o error del servidor.");
+      if (response.ok) {
+        console.log("✅ Login exitoso:", data);
+
+        const decoded = jwtDecode(data.access_token);
+        await AsyncStorage.setItem("accessToken", data.access_token);
+        await AsyncStorage.setItem("userId", decoded.sub ?? "");
+        await AsyncStorage.setItem("userName", decoded.username ?? "");
+
+        router.push("/Home");
+      } else {
+        console.error("❌ Error de login:", data?.message || data);
+        alert(data?.message || "Credenciales inválidas o error del servidor.");
+      }
+    } catch (error) {
+      console.error("❌ Error de red:", error);
+      alert("Error al conectar con el servidor.");
     }
-  } catch (error) {
-    console.error("❌ Error de red:", error);
-    alert("Error al conectar con el servidor.");
-  }
-};
-
+  };
 
   return (
     <View style={styles.container}>

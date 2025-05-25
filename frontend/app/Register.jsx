@@ -1,11 +1,25 @@
-import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, ScrollView,
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard,} from "react-native";
+  Keyboard,
+} from "react-native";
 import logo from "../assets/images/loguito1.png";
 import CustomText from "../src/components/CustomText";
-import { validateEmail, validateName, validatePhone, validateUser, validatePassword} from "../src/utils/helpers";
+import {
+  validateEmail,
+  validateName,
+  validatePhone,
+  validateUser,
+  validatePassword,
+} from "../src/utils/helpers";
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
@@ -13,9 +27,7 @@ import Head from "../src/components/Head";
 import Toast from "react-native-toast-message";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from 'jwt-decode';
-
-
+import { jwtDecode } from "jwt-decode";
 
 // Función para valores iniciales del formulario
 const defaultFormValues = () => ({
@@ -35,7 +47,6 @@ export default function Register() {
   const [formData, setFormData] = useState(defaultFormValues());
   const [errors, setErrors] = useState({});
   //const [loading, setLoading] = useState(false);
-
 
   const onChange = (text, field) => {
     setFormData({ ...formData, [field]: text });
@@ -80,95 +91,95 @@ export default function Register() {
   };
 
   const doRegisterUser = async () => {
-  const emptyFields = Object.keys(formData).filter(
-    (key) => formData[key].trim() === ""
-  );
+    const emptyFields = Object.keys(formData).filter(
+      (key) => formData[key].trim() === ""
+    );
 
-  if (emptyFields.length > 0) {
-    const newErrors = {};
-    emptyFields.forEach((field) => {
-      newErrors[field] = "Este campo es obligatorio.";
-    });
-    setErrors(newErrors);
-    return;
-  }
-
-  let hasErrors = false;
-  Object.keys(formData).forEach((field) => {
-    validateField(field, formData[field]);
-    if (errors[field]) {
-      hasErrors = true;
-    }
-  });
-
-  if (hasErrors) return;
-
-  try {
-    // 1. Registrar usuario
-    const response = await fetch(`${API_URL}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: formData.user,
-        nombre: `${formData.name} ${formData.lastName}`,
-        email: formData.email,
-        telefono: formData.phone,
-        direccion: {
-          calle: formData.direction,
-          ciudad: "Ciudad",
-          pais: "País",
-        },
-        gustos: [],
-        foto_perfil: "",
-        password: formData.password,
-        fecha_registro: new Date().toISOString(),
-      }),
-    });
-
-    const userData = await response.json();
-
-    if (!response.ok) {
-      alert("Error al registrar usuario: " + userData.message);
+    if (emptyFields.length > 0) {
+      const newErrors = {};
+      emptyFields.forEach((field) => {
+        newErrors[field] = "Este campo es obligatorio.";
+      });
+      setErrors(newErrors);
       return;
     }
 
-    // 2. Login automático
-    const loginResponse = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: formData.user,
-        password: formData.password,
-      }),
+    let hasErrors = false;
+    Object.keys(formData).forEach((field) => {
+      validateField(field, formData[field]);
+      if (errors[field]) {
+        hasErrors = true;
+      }
     });
 
-    const loginData = await loginResponse.json();
+    if (hasErrors) return;
 
-    if (!loginResponse.ok) {
-      alert("Registro exitoso, pero error al iniciar sesión.");
-      return;
+    try {
+      // 1. Registrar usuario
+      const response = await fetch(`${API_URL}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.user,
+          nombre: `${formData.name} ${formData.lastName}`,
+          email: formData.email,
+          telefono: formData.phone,
+          direccion: {
+            calle: formData.direction,
+            ciudad: "Ciudad",
+            pais: "País",
+          },
+          gustos: [],
+          foto_perfil: "",
+          password: formData.password,
+          fecha_registro: new Date().toISOString(),
+        }),
+      });
+
+      const userData = await response.json();
+
+      if (!response.ok) {
+        alert("Error al registrar usuario: " + userData.message);
+        return;
+      }
+
+      // 2. Login automático
+      const loginResponse = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.user,
+          password: formData.password,
+        }),
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        alert("Registro exitoso, pero error al iniciar sesión.");
+        return;
+      }
+
+      // 3. Guardar en almacenamiento local
+      const payload = jwtDecode(loginData.access_token);
+      await AsyncStorage.setItem("accessToken", loginData.access_token);
+      await AsyncStorage.setItem("userId", payload.sub);
+      await AsyncStorage.setItem("userName", decoded.username ?? "");
+
+      // 4. Mostrar toast y redirigir
+      Toast.show({
+        type: "customToast",
+        text1: "¡Registro exitoso!",
+        text2: "Sesión iniciada correctamente.",
+        visibilityTime: 3000,
+      });
+
+      setTimeout(() => router.push("/UserConfiguration"), 3000);
+    } catch (error) {
+      console.error("❌ Error en registro/login:", error);
+      alert("Error al conectar con el servidor.");
     }
-
-    // 3. Guardar en almacenamiento local
-  const payload = jwtDecode(loginData.access_token);
-  await AsyncStorage.setItem("accessToken", loginData.access_token);
-  await AsyncStorage.setItem("userId", payload.sub);
-
-    // 4. Mostrar toast y redirigir
-    Toast.show({
-      type: "customToast",
-      text1: "¡Registro exitoso!",
-      text2: "Sesión iniciada correctamente.",
-      visibilityTime: 3000,
-    });
-
-    setTimeout(() => router.push("/UserConfiguration"), 3000);
-  } catch (error) {
-    console.error("❌ Error en registro/login:", error);
-    alert("Error al conectar con el servidor.");
-  }
-};
-
+  };
 
   return (
     <KeyboardAvoidingView
@@ -180,7 +191,9 @@ export default function Register() {
           <View style={styles.inner}>
             <Head />
             <Image source={logo} style={[styles.img, { marginTop: "25%" }]} />
-            <CustomText style={[styles.buttonText, { fontSize: 30, marginBottom: "5%" }]}>
+            <CustomText
+              style={[styles.buttonText, { fontSize: 30, marginBottom: "5%" }]}
+            >
               Registro de usuario
             </CustomText>
 
@@ -362,9 +375,9 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 14,
-    marginTop: -5, 
-    marginBottom: 7, 
-    alignSelf: "flex-start", 
+    marginTop: -5,
+    marginBottom: 7,
+    alignSelf: "flex-start",
     paddingLeft: 10,
   },
 });
