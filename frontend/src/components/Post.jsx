@@ -20,10 +20,34 @@ export default function Post({ post }) {
 
 
   useEffect(() => {
-    if (typeof post.favorito === "boolean") {
-      setSaved(post.favorito);
+  const checkIfSaved = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("accessToken");
+
+    if (!userId || !token) return;
+
+    try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const res = await fetch(`${API_URL}/favorites/user/${userId}`, { headers });
+      const favorites = await res.json();
+
+      const isSaved = favorites.some(
+        (f) =>
+          (f.postId && f.postId._id === post._id) || f.postId === post._id
+      );
+
+      setSaved(isSaved);
+    } catch (error) {
+      console.error("Error comprobando favoritos:", error);
     }
-  }, [post.favorito]);
+  };
+
+  checkIfSaved();
+}, [post._id]); // o también [] si solo quieres que corra al montar
+
 
 
   {/*para los me gusta */}
@@ -145,39 +169,42 @@ const toggleSave = async () => {
         });
       }
     } else {
-      // Buscar favorito actual y eliminarlo
+      // ❌ Buscar favorito actual y eliminarlo
       const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
         headers,
       });
       const favorites = await resList.json();
 
       const favorite = favorites.find(
-        (f) => f.postId._id === post._id || f.postId === post._id
+        (f) =>
+          (f.postId && f.postId._id === post._id) ||
+          f.postId === post._id
       );
 
-      if (favorite?._id) {
-        const resDelete = await fetch(`${API_URL}/favorites/${favorite._id}`, {
-          method: "DELETE",
-          headers,
-        });
-
-        if (resDelete.ok) {
-          setSaved(false);
-          Toast.show({
-            type: "customToast",
-            text1: "Favorito eliminado",
-            text2: "Quitaste esta publicación de favoritos 💔",
-          });
-        } else {
-          Toast.show({
-            type: "error",
-            text1: "Error al quitar favorito",
-          });
-        }
-      } else {
+      if (!favorite || !favorite._id) {
         Toast.show({
           type: "info",
           text1: "Esta publicación no está en favoritos",
+        });
+        return;
+      }
+
+      const resDelete = await fetch(`${API_URL}/favorites/${favorite._id}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (resDelete.ok) {
+        setSaved(false);
+        Toast.show({
+          type: "customToast",
+          text1: "Favorito eliminado",
+          text2: "Quitaste esta publicación de favoritos 💔",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error al quitar favorito",
         });
       }
     }
@@ -189,6 +216,7 @@ const toggleSave = async () => {
     });
   }
 };
+
 
 
 
