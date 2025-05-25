@@ -32,16 +32,18 @@ export class LikesService {
 }
 
   async removeLike(id: string): Promise<Like | null> {
-    const like = await this.likeModel.findById(id).exec();
-    if (!like) return null;
+  const like = await this.likeModel.findById(id).exec();
+  if (!like) return null;
 
-    await this.postModel.updateOne(
-      { _id: like.postId },
-      { $pull: { likes: like.userId } }
-    );
+  await this.postModel.updateOne(
+    { _id: like.postId },
+    { $pull: { likes: new Types.ObjectId(like.userId) } },
+    { bypassDocumentValidation: true }
+  );
 
-    return this.likeModel.findByIdAndDelete(id).exec();
-  }
+  return this.likeModel.findByIdAndDelete(id).exec();
+}
+
 
   async findLikeByUserAndPost(userId: string, postId: string): Promise<Like | null> {
   return this.likeModel.findOne({
