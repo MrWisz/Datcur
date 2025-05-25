@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-@Schema()
+@Schema({ _id: false }) // subdocumento no necesita _id por defecto, ya lo defines manual
 export class Comment {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   usuario_id: Types.ObjectId;
@@ -15,6 +15,8 @@ export class Comment {
   @Prop({ type: Types.ObjectId, default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 }
+
+export const CommentSchema = SchemaFactory.createForClass(Comment);
 
 @Schema()
 export class Post extends Document {
@@ -33,15 +35,14 @@ export class Post extends Document {
   @Prop({ required: true })
   fecha_creacion: Date;
 
-  @Prop({ type: [Types.ObjectId], ref: 'User' })
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
   likes: Types.ObjectId[];
 
-  @Prop({ type: [Comment], default: [] })
+  @Prop({ type: [CommentSchema], default: [] }) // importante usar el schema aquí
   comentarios: Comment[];
 
-  @Prop({ type: [Types.ObjectId], ref: 'User' })
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
   favoritos: Types.ObjectId[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
-export const CommentSchema = SchemaFactory.createForClass(Comment);

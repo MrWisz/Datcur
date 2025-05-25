@@ -21,7 +21,7 @@ const Home = () => {
     const fetchPosts = async () => {
       const token = await AsyncStorage.getItem("accessToken");
       const userId = await AsyncStorage.getItem("userId");
-      if (!token) return;
+      if (!token || !userId) return;
 
       try {
         const response = await fetch(`${API_URL}/posts`, {
@@ -37,19 +37,18 @@ const Home = () => {
           return;
         }
 
-       const enrichedPosts = data
-      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)) 
-      .map((p) => ({
-        ...p,
-        usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
-        userAvatar: p.usuario_id.foto_perfil || undefined,
-        image: p.fotos?.[0] || undefined,
-        description: p.descripcion,
-        date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
-        likes: p.likes?.length || 0, // número, no array
-        liked: p.likes?.some((id) => id === userId),
-        favorito: p.favoritos?.some((id) => id === userId),
-      }));
+        const enrichedPosts = data
+          .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion))
+          .map((p) => ({
+            ...p,
+            userAvatar: p.usuario_id?.foto_perfil || undefined,
+            description: p.descripcion,
+            image: p.fotos?.[0] || undefined,
+            date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
+            likes: p.likes?.length || 0,
+            liked: p.likes?.some((id) => id === userId),
+            favorito: p.favoritos?.some((id) => id === userId),
+          }));
 
         setPosts(enrichedPosts);
       } catch (err) {
@@ -102,61 +101,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingBottom: 10,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    backgroundColor: "#d1d1d1", // gray-300
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#a0a0a0", // gray-400
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  username: {
-    marginLeft: 8,
-    width: 96,
-    height: 16,
-    backgroundColor: "#000",
-    borderRadius: 4,
-  },
-  postContent: {
-    marginBottom: 12,
-    gap: 8,
-  },
-  textLine: {
-    width: "100%",
-    height: 16,
-    backgroundColor: "#000",
-    borderRadius: 4,
-  },
-  imageContainer: {
-    borderWidth: 1,
-    borderColor: "#a0a0a0", // gray-400
-    borderRadius: 4,
-    marginBottom: 12,
-    padding: 16,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  postImage: {
-    height: 100,
-    position: "relative",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#a0a0a0", // gray-400
-    marginBottom: 12,
-  },
-  interactions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
   },
 });
 
