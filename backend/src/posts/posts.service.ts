@@ -141,13 +141,16 @@ export class PostsService {
   }
 
   async findAllWithLikedFlag(userId: string): Promise<any[]> {
-    const posts = await this.postModel.find().populate('usuario_id').lean(); // convierte a objetos JS puros
+  const posts = await this.postModel
+    .find()
+    .populate('usuario_id')
+    .lean(); // convierte a objetos JS puros
 
-    return posts.map((post) => ({
-      ...post,
-      liked: post.likes?.some((id) => id.toString() === userId),
-    }));
-  }
+  return posts.map((post) => ({
+    ...post,
+    liked: post.likes?.some((id) => id.toString() === userId),
+  }));
+}
 
   async getPostsPaginated(
     paginationParameters: PaginationParameters,

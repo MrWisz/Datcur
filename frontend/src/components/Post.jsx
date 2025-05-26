@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  TextInput, 
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import CustomText from "./CustomText";
@@ -27,142 +27,175 @@ export default function Post({ post }) {
 
 
   useEffect(() => {
-    if (typeof post.favorito === "boolean") {
-      setSaved(post.favorito);
-    }
-  }, [post.favorito]);
+    const checkIfSaved = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("accessToken");
 
+      if (!userId || !token) return;
 
-  {/*para los me gusta */}
- const toggleLike = async () => {
-  try {
-    const userId = await AsyncStorage.getItem("userId");
-    const token = await AsyncStorage.getItem("accessToken");
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
-    if (!userId || !token) {
-      Toast.show({ type: "error", text1: "Sesión no válida" });
-      return;
-    }
+        const res = await fetch(`${API_URL}/favorites/user/${userId}`, { headers });
+        const favorites = await res.json();
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+        const isSaved = favorites.some(
+          (f) =>
+            (f.postId && f.postId._id === post._id) || f.postId === post._id
+        );
+
+        setSaved(isSaved);
+      } catch (error) {
+        console.error("Error comprobando favoritos:", error);
+      }
     };
 
-    if (!liked) {
-      const res = await fetch(`${API_URL}/likes`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ userId, postId: post._id }),
-      });
+    checkIfSaved();
+  }, [post._id]); // o también [] si solo quieres que corra al montar
 
-      if (res.ok) {
-        setLiked(true);
-        setLikesCount((prev) => prev + 1);
-        Toast.show({
-          type: "customToast",
-          text1: "Te gustó esta publicación ❤️",
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Error al dar like",
-        });
+
+
+  {/*para los me gusta */ }
+  const toggleLike = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("accessToken");
+
+      if (!userId || !token) {
+        Toast.show({ type: "error", text1: "Sesión no válida" });
+        return;
       }
-    } else {
-      const resLike = await fetch(
-        `${API_URL}/likes/by-user/${userId}/post/${post._id}`,
-        { headers }
-      );
 
-      const like = await resLike.json();
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
 
-      if (like?._id) {
-        const res = await fetch(`${API_URL}/likes/${like._id}`, {
-          method: "DELETE",
+      if (!liked) {
+        const res = await fetch(`${API_URL}/likes`, {
+          method: "POST",
           headers,
+          body: JSON.stringify({ userId, postId: post._id }),
         });
 
         if (res.ok) {
-          setLiked(false);
-          setLikesCount((prev) => Math.max(prev - 1, 0));
+          setLiked(true);
+          setLikesCount((prev) => prev + 1);
           Toast.show({
             type: "customToast",
-            text1: "Ya no te gusta esta publicación",
+            text1: "Te gustó esta publicación ❤️",
           });
         } else {
           Toast.show({
             type: "error",
-            text1: "Error al quitar like",
+            text1: "Error al dar like",
           });
         }
       } else {
-        Toast.show({
-          type: "info",
-          text1: "No tienes like en esta publicación",
-        });
+        const resLike = await fetch(
+          `${API_URL}/likes/by-user/${userId}/post/${post._id}`,
+          { headers }
+        );
+
+        const like = await resLike.json();
+
+        if (like?._id) {
+          const res = await fetch(`${API_URL}/likes/${like._id}`, {
+            method: "DELETE",
+            headers,
+          });
+
+          if (res.ok) {
+            setLiked(false);
+            setLikesCount((prev) => Math.max(prev - 1, 0));
+            Toast.show({
+              type: "customToast",
+              text1: "Ya no te gusta esta publicación",
+            });
+          } else {
+            Toast.show({
+              type: "error",
+              text1: "Error al quitar like",
+            });
+          }
+        } else {
+          Toast.show({
+            type: "info",
+            text1: "No tienes like en esta publicación",
+          });
+        }
       }
-    }
-  } catch (error) {
-    console.error("Error en toggleLike:", error);
-    Toast.show({
-      type: "error",
-      text1: "Error inesperado",
-    });
-  }
-};
-
-const toggleSave = async () => {
-  try {
-    const userId = await AsyncStorage.getItem("userId");
-    const token = await AsyncStorage.getItem("accessToken");
-
-    if (!userId || !token) {
+    } catch (error) {
+      console.error("Error en toggleLike:", error);
       Toast.show({
-        type: "customToast",
-        text1: "Sesión no válida",
+        type: "error",
+        text1: "Error inesperado",
       });
-      return;
     }
+  };
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
+  const toggleSave = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("accessToken");
 
-    if (!saved) {
-      // ➕ Agregar a favoritos
-      const res = await fetch(`${API_URL}/favorites`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ userId, postId: post._id }),
-      });
-
-      if (res.ok) {
-        setSaved(true);
+      if (!userId || !token) {
         Toast.show({
           type: "customToast",
-          text1: "Guardado",
-          text2: "Publicación agregada a favoritos 💛",
+          text1: "Sesión no válida",
         });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Error al guardar favorito",
-        });
+        return;
       }
-    } else {
-      // Buscar favorito actual y eliminarlo
-      const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
-        headers,
-      });
-      const favorites = await resList.json();
 
-      const favorite = favorites.find(
-        (f) => f.postId._id === post._id || f.postId === post._id
-      );
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
 
-      if (favorite?._id) {
+      if (!saved) {
+        // ➕ Agregar a favoritos
+        const res = await fetch(`${API_URL}/favorites`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ userId, postId: post._id }),
+        });
+
+        if (res.ok) {
+          setSaved(true);
+          Toast.show({
+            type: "customToast",
+            text1: "Guardado",
+            text2: "Publicación agregada a favoritos 💛",
+          });
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Error al guardar favorito",
+          });
+        }
+      } else {
+        // ❌ Buscar favorito actual y eliminarlo
+        const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
+          headers,
+        });
+        const favorites = await resList.json();
+
+        const favorite = favorites.find(
+          (f) =>
+            (f.postId && f.postId._id === post._id) ||
+            f.postId === post._id
+        );
+
+        if (!favorite || !favorite._id) {
+          Toast.show({
+            type: "info",
+            text1: "Esta publicación no está en favoritos",
+          });
+          return;
+        }
+
         const resDelete = await fetch(`${API_URL}/favorites/${favorite._id}`, {
           method: "DELETE",
           headers,
@@ -181,50 +214,44 @@ const toggleSave = async () => {
             text1: "Error al quitar favorito",
           });
         }
-      } else {
-        Toast.show({
-          type: "info",
-          text1: "Esta publicación no está en favoritos",
-        });
       }
+    } catch (error) {
+      console.error("Error en toggleSave:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error inesperado al marcar favorito",
+      });
     }
-  } catch (error) {
-    console.error("Error en toggleSave:", error);
-    Toast.show({
-      type: "error",
-      text1: "Error inesperado al marcar favorito",
-    });
-  }
-};
+  };
 
-
-
-  {/*para los comentarios */}
+  {/*para los comentarios */ }
   const [showComments, setShowComments] = useState(false);
-  
-    const [commentText, setCommentText] = useState("");
+
+  const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
 
   const handleSendComment = () => {
     if (commentText.trim()) {
       setComments((prev) => [...prev, commentText.trim()]);
       setCommentText("");
-    Toast.show({
-      type: "customToast",
-      text1: "Exito",
-      text2: "Enviado",
-      visibilityTime: 3000,
-    });
+      Toast.show({
+        type: "customToast",
+        text1: "Exito",
+        text2: "Enviado",
+        visibilityTime: 3000,
+      });
     }
   };
 
-  {/*para guardar los fav */}
+  {/*para guardar los fav */ }
   // const toggleSave = () => {
   //   setSaved(!saved);
   // };
   //console.log("POST DATA:", post);
 
+
   return (
+
     <View style={styles.card}>
       <View style={styles.header}>
         <Image

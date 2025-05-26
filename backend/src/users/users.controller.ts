@@ -10,6 +10,7 @@ import {
   UploadedFile,
   BadRequestException,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -20,6 +21,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(
@@ -28,7 +30,9 @@ export class UsersController {
   ) {}
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<{ userId: string }> {
+  async create(
+    @Body() createUserDto: CreateUserDto
+  ): Promise<{ userId: string }> {
     return this.usersService.create(createUserDto);
   }
 
@@ -37,13 +41,27 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('search')
+  async searchUsers(@Query('query') query: string): Promise<User[]> {
+    return this.usersService.searchUsersByUsernameOrName(query);
+  }
+
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
+  @Get(':id/profile-with-posts')
+  async getProfileWithPosts(@Param('id') id: string) {
+    return this.usersService.getProfileWithPosts(id);
+  }
+
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto
+  ): Promise<User> {
     return this.usersService.update(id, updateUserDto);
   }
 
@@ -53,12 +71,18 @@ export class UsersController {
   }
 
   @Post(':id/seguir')
-  async follow(@Param('id') id: string, @Body('userId') userId: string): Promise<User> {
+  async follow(
+    @Param('id') id: string,
+    @Body('userId') userId: string
+  ): Promise<User> {
     return this.usersService.follow(id, userId);
   }
 
   @Post(':id/dejar-de-seguir')
-  async unfollow(@Param('id') id: string, @Body('userId') userId: string): Promise<User> {
+  async unfollow(
+    @Param('id') id: string,
+    @Body('userId') userId: string
+  ): Promise<User> {
     return this.usersService.unfollow(id, userId);
   }
 
@@ -73,7 +97,6 @@ export class UsersController {
   }
 
   @Put(':id/configure')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -86,11 +109,14 @@ export class UsersController {
     @Body('gustos') gustosJson: string,
   ): Promise<User> {
     const gustos = JSON.parse(gustosJson);
-    const updated = await this.usersService.configureUser(id, file.buffer, gustos);
-    return updated as User; 
+    const updated = await this.usersService.configureUser(
+      id,
+      file.buffer,
+      gustos,
+    );
+    return updated as User;
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post(':id/upload-photo')
   @UseInterceptors(FileInterceptor('file'))
   async uploadPhoto(

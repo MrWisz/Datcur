@@ -1,78 +1,86 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, StatusBar, FlatList } from "react-native";
+import { View, StyleSheet, StatusBar, FlatList, BackHandler } from "react-native";
 import { useFonts } from "expo-font";
 import BottomNavigation from "../src/components/BottomNavigation";
 import SearchBar from "../src/components/SearchBar";
 import UserInfo from "../src/components/UserInfo";
-import { BackHandler } from "react-native";
 import { useRouter } from "expo-router";
+import { API_URL } from '@env';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Search = () => {
   const [searchText, setSearchText] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [fontsLoaded] = useFonts({
     ComicNeue: require("../assets/fonts/ComicNeue-Regular.ttf"),
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
-  // Lista de usuarios de ejemplo
-  const users = [
-    {
-      id: "1",
-      username: "joana_doe22",
-      fullName: "Joana Doe",
-      avatar: "https://picsum.photos/200",
-    },
-    {
-      id: "2",
-      username: "karina_smith1",
-      fullName: "Karina Smith",
-      avatar: "https://picsum.photos/201",
-    },
-    {
-      id: "3",
-      username: "robert_perez",
-      fullName: "Robert Perez",
-      avatar: "https://picsum.photos/202",
-    },
-    {
-      id: "4",
-      username: "maria_garcia",
-      fullName: "Maria Garcia",
-      avatar: "https://picsum.photos/203",
-    },
-  ];
+  const router = useRouter();
 
-  // Filtrar usuarios basado en el texto de búsqueda
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(searchText.toLowerCase()) ||
-    user.fullName.toLowerCase().includes(searchText.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (searchText.trim() === "") {
+        setUsers([]);
+        return;
+      }
 
-    const router = useRouter();
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
 
-  if (!fontsLoaded) {
-    return null;
-  }
+        const res = await fetch(
+          `${API_URL}/users/search?query=${encodeURIComponent(searchText)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          const mapped = data.map((u) => ({
+            id: u._id,
+            username: u.username || u.nombre,
+            fullName: u.nombre,
+            avatar: u.foto_perfil || "https://picsum.photos/seed/default/200",
+          }));
+          setUsers(mapped);
+        } else {
+          setUsers([]);
+        }
+      } catch (err) {
+        console.error("Error buscando usuarios:", err);
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [searchText]);
+
+  useEffect(() => {
+    const backAction = () => {
+      router.replace("/Home");
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   const handleSearchTextChange = (text) => {
     setSearchText(text);
   };
-
-
-  
-  useEffect(() => {
-      const backAction = () => {
-        router.replace("/Home"); //limpia el historial
-        return true; 
-      };
-  
-      const backHandler = BackHandler.addEventListener(
-        "hardwareBackPress",
-        backAction
-      );
-  
-      return () => backHandler.remove();
-  }, []);
 
   const renderUserItem = ({ item }) => (
     <UserInfo
@@ -81,6 +89,8 @@ const Search = () => {
       fullName={item.fullName}
     />
   );
+
+  if (!fontsLoaded) return null;
 
   return (
     <View style={styles.container}>
@@ -92,9 +102,9 @@ const Search = () => {
           placeholder="Buscar usuarios..."
         />
         <FlatList
-          data={filteredUsers}
+          data={users}
           renderItem={renderUserItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           style={styles.userList}
           showsVerticalScrollIndicator={false}
         />
@@ -116,8 +126,7 @@ const styles = StyleSheet.create({
   userList: {
     flex: 1,
     paddingHorizontal: 16,
-  }
+  },
 });
 
 export default Search;
-//realice la barra de buscar

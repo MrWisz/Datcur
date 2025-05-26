@@ -38,8 +38,18 @@ async addFavorite(userId: string, postId: string): Promise<Favorite> {
 }
 
   async removeFavorite(id: string): Promise<Favorite | null> {
-    return this.favoriteModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
-  }
+  const favorite = await this.favoriteModel.findById(id).exec();
+  if (!favorite) return null;
+
+  await this.postModel.updateOne(
+    { _id: favorite.postId },
+    { $pull: { favoritos: new Types.ObjectId(favorite.userId) } },
+    { bypassDocumentValidation: true }
+  );
+
+  return this.favoriteModel.findByIdAndDelete(id).exec();
+}
+
 
   async findOne(id: string): Promise<Favorite | null> {
     return this.favoriteModel.findById(new Types.ObjectId(id)).exec();
