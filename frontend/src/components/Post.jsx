@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   Image,
   TextInput,
 } from "react-native";
@@ -13,18 +12,32 @@ import Toast from "react-native-toast-message";
 import { router } from "expo-router";
 import { API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StyleSheet } from "react-native";
 
+
+// Normaliza el contador de likes
+function getLikesCount(likes) {
+  if (Array.isArray(likes)) return likes.length;
+  if (typeof likes === "number") return likes;
+  if (typeof likes === "string" && likes.trim() !== "") return 1; // Si es un id de like, cuenta como 1
+  if (typeof likes === "object" && likes !== null && likes._id) return 1;
+  return 0;
+}
+
+// Construye la URL de imagen aunque solo sea un path
+function getImageUrl(image) {
+  if (typeof image === "string" && image.trim() !== "") {
+    if (image.startsWith("http")) return image;
+    // Si solo es un path relativo, lo convierte a URL absoluta
+    return `${API_URL.replace(/\/$/, "")}/${image.replace(/^\/+/, "")}`;
+  }
+  return null;
+}
 
 export default function Post({ post }) {
-  console.log("Rendering Post:", post?._id, post?.descripcion);
-  if (!post) {
-    console.warn("Post component received no post prop!");
-    return null; 
-  }
   const [liked, setLiked] = useState(post.liked || false);
-  const [likesCount, setLikesCount] = useState(post.likes || 0);
+  // Ya no uses likesCount aquí, solo usa getLikesCount(post.likes) en el render.
   const [saved, setSaved] = useState(post.favorito || false);
-
 
   useEffect(() => {
     const checkIfSaved = async () => {
@@ -53,11 +66,9 @@ export default function Post({ post }) {
     };
 
     checkIfSaved();
-  }, [post._id]); // o también [] si solo quieres que corra al montar
+  }, [post._id]);
 
-
-
-  {/*para los me gusta */ }
+  // Likes
   const toggleLike = async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
@@ -82,7 +93,10 @@ export default function Post({ post }) {
 
         if (res.ok) {
           setLiked(true);
-          setLikesCount((prev) => prev + 1);
+          // Si post.likes es un array, simula agregar uno extra localmente:
+          if (Array.isArray(post.likes)) post.likes = [...post.likes, { userId, postId: post._id }];
+          else if (typeof post.likes === "number") post.likes += 1;
+          else post.likes = 1;
           Toast.show({
             type: "customToast",
             text1: "Te gustó esta publicación ❤️",
@@ -109,7 +123,10 @@ export default function Post({ post }) {
 
           if (res.ok) {
             setLiked(false);
-            setLikesCount((prev) => Math.max(prev - 1, 0));
+            // Resta localmente el like (según cómo venga post.likes)
+            if (Array.isArray(post.likes)) post.likes = post.likes.slice(0, -1);
+            else if (typeof post.likes === "number" && post.likes > 0) post.likes -= 1;
+            else post.likes = 0;
             Toast.show({
               type: "customToast",
               text1: "Ya no te gusta esta publicación",
@@ -136,6 +153,7 @@ export default function Post({ post }) {
     }
   };
 
+  // Favoritos
   const toggleSave = async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
@@ -224,9 +242,8 @@ export default function Post({ post }) {
     }
   };
 
-  {/*para los comentarios */ }
+  // Comentarios
   const [showComments, setShowComments] = useState(false);
-
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
 
@@ -243,58 +260,62 @@ export default function Post({ post }) {
     }
   };
 
-  {/*para guardar los fav */ }
-  // const toggleSave = () => {
-  //   setSaved(!saved);
-  // };
-  //console.log("POST DATA:", post);
-
+  // Navegación segura
+  const handleProfilePress = () => {
+    if (post.usuario_id && typeof post.usuario_id === "object" && post.usuario_id._id) {
+      router.push(`/Profile?userId=${post.usuario_id._id}`);
+    } else if (typeof post.usuario_id === "string") {
+      Toast.show({ type: "info", text1: "Perfil no disponible" });
+    } else {
+      console.warn("❗️ usuario_id no disponible:", post.usuario_id);
+    }
+  };
 
   return (
-
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Image
-          source={{ uri: post.usuario_id?.foto_perfil }}
-          style={styles.avatar}
-        />
-        <TouchableOpacity onPress={() => router.replace("/ProfileFollower")}>
-          <CustomText style={styles.username}>
-            {post.usuario_id?.username}
+    <View style={styles?.card}>
+      <View style={styles?.header}>
+        <Image source={{ uri: post.usuario_id?.foto_perfil }} style={styles.avatar} />
+        <TouchableOpacity onPress={handleProfilePress}>
+          <CustomText style={styles?.username}>
+            {post.usuario_id?.nombre || post.usuario_id || "Usuario"}
           </CustomText>
         </TouchableOpacity>
-        <Text style={styles.date}>
-          {new Date(post.fecha_creacion).toLocaleDateString()}
+        <Text style={[styles.date, { fontSize: 11 }]}>
+          {post.fecha_creacion
+            ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+            : ""}
         </Text>
-      </View>
-      <CustomText style={styles.description}>{post.descripcion}</CustomText>
 
-      {post.fotos && post.fotos.length > 0 && (
+      </View>
+      <CustomText style={styles?.description}>{post.descripcion}</CustomText>
+      {post.fotos && post.fotos[0] && (
         <Image source={{ uri: post.fotos[0] }} style={styles.postImage} />
       )}
-      {/*interaccion de cada publicacion */}
-      <View style={styles.interactions}>
-        <TouchableOpacity onPress={toggleLike} style={styles.actionBtn}>
-          {/*me gusta */}
+      <View style={styles?.interactions}>
+        <TouchableOpacity onPress={toggleLike} style={styles?.actionBtn}>
           <Icon name="heart" size={20} color={liked ? "red" : "#333"} />
-          <Text style={styles.actionText}>{likesCount}</Text>
+          <Text style={styles?.actionText}>{getLikesCount(post.likes)}</Text>
         </TouchableOpacity>
-        {/*hacer comentarios */}
         <TouchableOpacity
           onPress={() => setShowComments(!showComments)}
-          style={styles.actionBtn}
+          style={styles?.actionBtn}
         >
           <Icon name="message-circle" size={20} color="#333" />
         </TouchableOpacity>
-        {/*agregar favoritos */}
-        <TouchableOpacity onPress={toggleSave} style={styles.actionBtn}>
+        <TouchableOpacity onPress={toggleSave} style={styles?.actionBtn}>
           <Icon name="star" size={20} color={saved ? "#FFC107" : "#333"} />
         </TouchableOpacity>
       </View>
       {showComments && (
-        <View style={styles.commentBox}>
+        <View style={styles?.commentBox}>
           <TextInput
-            style={[styles.input, { fontFamily: "Comic-Bold" }]}
+            style={[styles?.input, { fontFamily: "Comic-Bold" }]}
             placeholder="Escribe un comentario..."
             value={commentText}
             onChangeText={setCommentText}
@@ -307,6 +328,7 @@ export default function Post({ post }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   card: {
@@ -360,7 +382,9 @@ const styles = StyleSheet.create({
   },
   date: {
     marginLeft: "auto",
-    alignSelf: "flex-start",
+    alignSelf: "center",
+    fontSize: 11,
+    color: "#888",
   },
   commentBox: {
     flexDirection: "row",
