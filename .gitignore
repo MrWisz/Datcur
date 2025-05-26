@@ -74,7 +74,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .package-lock.json
 
-
+node_modules/
+dist/
 
 #Lock files. Do not ignore these.
 #package-lock.json
