@@ -13,7 +13,14 @@ import Toast from "react-native-toast-message";
 import { router } from "expo-router";
 import { API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
 export default function Post({ post }) {
+  console.log("Rendering Post:", post?._id, post?.descripcion);
+  if (!post) {
+    console.warn("Post component received no post prop!");
+    return null; 
+  }
   const [liked, setLiked] = useState(post.liked || false);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [saved, setSaved] = useState(post.favorito || false);
@@ -215,19 +222,29 @@ const toggleSave = async () => {
   // const toggleSave = () => {
   //   setSaved(!saved);
   // };
+  //console.log("POST DATA:", post);
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Image source={{ uri: post.userAvatar }} style={styles.avatar} />
+        <Image
+          source={{ uri: post.usuario_id?.foto_perfil }}
+          style={styles.avatar}
+        />
         <TouchableOpacity onPress={() => router.replace("/ProfileFollower")}>
-          <CustomText style={styles.username}>{post.usuario_id}</CustomText>
+          <CustomText style={styles.username}>
+            {post.usuario_id?.username}
+          </CustomText>
         </TouchableOpacity>
-        <Text style={styles.date}>{post.date}</Text>
+        <Text style={styles.date}>
+          {new Date(post.fecha_creacion).toLocaleDateString()}
+        </Text>
       </View>
-      <CustomText style={styles.description}>{post.description}</CustomText>
+      <CustomText style={styles.description}>{post.descripcion}</CustomText>
 
-      <Image source={{ uri: post.image }} style={styles.postImage} />
+      {post.fotos && post.fotos.length > 0 && (
+        <Image source={{ uri: post.fotos[0] }} style={styles.postImage} />
+      )}
       {/*interaccion de cada publicacion */}
       <View style={styles.interactions}>
         <TouchableOpacity onPress={toggleLike} style={styles.actionBtn}>
@@ -246,7 +263,6 @@ const toggleSave = async () => {
         <TouchableOpacity onPress={toggleSave} style={styles.actionBtn}>
           <Icon name="star" size={20} color={saved ? "#FFC107" : "#333"} />
         </TouchableOpacity>
-
       </View>
       {showComments && (
         <View style={styles.commentBox}>
@@ -272,6 +288,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 10,
     elevation: 3,
+    width: "95%",
+    alignSelf: 'center',
   },
   header: {
     flexDirection: "row",
@@ -290,7 +308,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: "100%",
-    //height: 250,
+    height: 300,
     borderRadius: 10,
     marginVertical: 10,
     height: 300,
