@@ -5,8 +5,14 @@ import BottomNavigation from "../src/components/BottomNavigation";
 import SearchBar from "../src/components/SearchBar";
 import UserInfo from "../src/components/UserInfo";
 import { useRouter } from "expo-router";
-import { API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+
+const API_URL =
+  Constants.expoConfig?.extra?.API_URL ||
+  Constants.manifest?.extra?.API_URL ||
+  "";
+
 
 const Search = () => {
   const [searchText, setSearchText] = useState("");

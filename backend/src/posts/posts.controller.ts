@@ -49,9 +49,10 @@ export class PostsController {
   }
 
   @Get('count')
-  async countPosts(): Promise<number> {
-    return this.postsService.countPosts();
-  }
+async countPosts(@Query() params: PaginationParameters): Promise<number> {
+  return this.postsService.countPosts(params);
+}
+
 
   /*@Get(':id')
   async findAll(@Req() req: Request): Promise<PostDocument[]> {
@@ -81,6 +82,7 @@ export class PostsController {
   async getPostsPaginated(
     @Query() getPostsParameters: PaginationParameters,
   ): Promise<PostDocument[]> {
+    console.log("Query completa recibida:", getPostsParameters);
     return this.postsService.getPostsPaginated(getPostsParameters);
   }
 }
