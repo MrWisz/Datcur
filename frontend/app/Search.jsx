@@ -51,6 +51,7 @@ const Search = () => {
         if (Array.isArray(data)) {
           const mapped = data.map((u) => ({
             id: u._id,
+            userId: u._id,
             username: u.username || u.nombre,
             fullName: u.nombre,
             avatar: u.foto_perfil || "https://picsum.photos/seed/default/200",
@@ -93,6 +94,8 @@ const Search = () => {
       avatar={item.avatar}
       username={item.username}
       fullName={item.fullName}
+      userId={item.userId} // <- Pasa userId
+      onPressProfile={() => router.push(`/Profile?userId=${item.userId}`)}
     />
   );
 

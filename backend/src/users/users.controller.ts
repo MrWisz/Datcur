@@ -21,13 +21,13 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
-@UseGuards(JwtAuthGuard)
+
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   @Post()
   async create(
@@ -35,28 +35,28 @@ export class UsersController {
   ): Promise<{ userId: string }> {
     return this.usersService.create(createUserDto);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get('search')
   async searchUsers(@Query('query') query: string): Promise<User[]> {
     return this.usersService.searchUsersByUsernameOrName(query);
   }
 
-
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get(':id/profile-with-posts')
   async getProfileWithPosts(@Param('id') id: string) {
     return this.usersService.getProfileWithPosts(id);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -64,12 +64,12 @@ export class UsersController {
   ): Promise<User> {
     return this.usersService.update(id, updateUserDto);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<User> {
     return this.usersService.remove(id);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Post(':id/seguir')
   async follow(
     @Param('id') id: string,
@@ -77,7 +77,7 @@ export class UsersController {
   ): Promise<User> {
     return this.usersService.follow(id, userId);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Post(':id/dejar-de-seguir')
   async unfollow(
     @Param('id') id: string,
@@ -85,7 +85,7 @@ export class UsersController {
   ): Promise<User> {
     return this.usersService.unfollow(id, userId);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get(':id/seguidores')
   async getFollowers(@Param('id') id: string): Promise<User[]> {
     return this.usersService.getFollowers(id);
@@ -95,7 +95,7 @@ export class UsersController {
   async getFollowing(@Param('id') id: string): Promise<User[]> {
     return this.usersService.getFollowing(id);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Put(':id/configure')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -103,6 +103,8 @@ export class UsersController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
+
+  @UseGuards(JwtAuthGuard)
   async configureUser(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
