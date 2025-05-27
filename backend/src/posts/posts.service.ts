@@ -85,8 +85,20 @@ export class PostsService {
       .exec();
   }*/
 
+  /*async findOne(id: string): Promise<PostDocument> {
+        const post = await this.postModel.findById(new Types.ObjectId(id)).exec();
+        if (!post) {
+          throw new NotFoundException(`Post with ID ${id} not found`);
+        }
+        return post;*/
+
+  // cambiando el findOne para que funcione el Post Individual
+
   async findOne(id: string): Promise<PostDocument> {
-    const post = await this.postModel.findById(new Types.ObjectId(id)).exec();
+    const post = await this.postModel
+      .findById(new Types.ObjectId(id))
+      .populate('usuario_id', 'nombre username foto_perfil') 
+      .exec();
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -141,16 +153,13 @@ export class PostsService {
   }
 
   async findAllWithLikedFlag(userId: string): Promise<any[]> {
-  const posts = await this.postModel
-    .find()
-    .populate('usuario_id')
-    .lean(); // convierte a objetos JS puros
+    const posts = await this.postModel.find().populate('usuario_id').lean(); // convierte a objetos JS puros
 
-  return posts.map((post) => ({
-    ...post,
-    liked: post.likes?.some((id) => id.toString() === userId),
-  }));
-}
+    return posts.map((post) => ({
+      ...post,
+      liked: post.likes?.some((id) => id.toString() === userId),
+    }));
+  }
 
   async getPostsPaginated(
     paginationParameters: PaginationParameters,
@@ -159,7 +168,6 @@ export class PostsService {
   }
 
   async countPosts(params?: PaginationParameters): Promise<number> {
-  return this.postsRepository.countPosts(params);
-}
-
+    return this.postsRepository.countPosts(params);
+  }
 }

@@ -277,10 +277,22 @@ export default function Post({ post }) {
     }
   };
 
+  //post individual
+  const postInd = () => {
+    if (post._id) {
+      router.push(`/PostIndividual?postId=${post._id}`);
+    } else {
+      Toast.show({ type: "error", text1: "Publicación no encontrada" });
+    }
+  };
+
   return (
     <View style={styles?.card}>
       <View style={styles?.header}>
-        <Image source={{ uri: post.usuario_id?.foto_perfil }} style={styles.avatar} />
+        <Image
+          source={{ uri: post.usuario_id?.foto_perfil }}
+          style={styles.avatar}
+        />
         <TouchableOpacity onPress={handleProfilePress}>
           <CustomText style={styles?.username}>
             {post.usuario_id?.nombre || post.usuario_id || "Usuario"}
@@ -289,15 +301,14 @@ export default function Post({ post }) {
         <Text style={[styles.date, { fontSize: 11 }]}>
           {post.fecha_creacion
             ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
             : ""}
         </Text>
-
       </View>
       <CustomText style={styles?.description}>{post.descripcion}</CustomText>
       {post.fotos && post.fotos[0] && (
@@ -309,7 +320,7 @@ export default function Post({ post }) {
           <Text style={styles?.actionText}>{getLikesCount(post.likes)}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => setShowComments(!showComments)}
+          onPress={postInd}
           style={styles?.actionBtn}
         >
           <Icon name="message-circle" size={20} color="#333" />
