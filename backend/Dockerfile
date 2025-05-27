@@ -10,8 +10,8 @@ RUN npm install
 # Copy source files
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Compila y muestra el contenido del dist
+RUN npm run build && ls -l /app/dist
 
 # Expose the port
 EXPOSE 3000
