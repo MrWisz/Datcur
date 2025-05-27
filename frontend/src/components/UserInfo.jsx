@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import CustomText from './CustomText';
 
-const UserInfo = ({ avatar, username, fullName }) => {
+const UserInfo = ({ avatar, username, fullName, userId, onPressProfile }) => {
   return (
-    <TouchableOpacity style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={onPressProfile}>
       <Image
         source={{ uri: avatar }}
         style={styles.avatar}
@@ -17,6 +17,7 @@ const UserInfo = ({ avatar, username, fullName }) => {
     </TouchableOpacity>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

@@ -11,15 +11,22 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Express } from 'express';
+import { PaginationParameters } from './dto/pagination-parameters.dto';
+import { PostsRepository } from './posts.repository';
+import { PostDocument } from './schemas/post.schema';
 
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectModel(Post.name) private postModel: Model<Post>,
-    private readonly cloudinaryService: CloudinaryService
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly postsRepository: PostsRepository,
   ) {}
 
-  async create(createPostDto: CreatePostDto, usuario_id: string): Promise<Post> {
+  async create(
+    createPostDto: CreatePostDto,
+    usuario_id: string,
+  ): Promise<PostDocument> {
     try {
       const createdPost = new this.postModel({
         ...createPostDto,
@@ -32,20 +39,24 @@ export class PostsService {
       return await createdPost.save();
     } catch (error) {
       console.error('Error al crear el post:', error);
-      throw new BadRequestException('Error al crear el post. Verifica los datos enviados.');
+      throw new BadRequestException(
+        'Error al crear el post. Verifica los datos enviados.',
+      );
     }
   }
 
   async createPostWithImages(
     body: any,
     images: Express.Multer.File[],
-    usuario_id: string
-  ): Promise<Post> {
+    usuario_id: string,
+  ): Promise<PostDocument> {
     try {
       const fotos: string[] = [];
 
       for (const file of images) {
-        const imageUrl = await this.cloudinaryService.uploadImageFromBuffer(file.buffer);
+        const imageUrl = await this.cloudinaryService.uploadImageFromBuffer(
+          file.buffer,
+        );
         fotos.push(imageUrl);
       }
 
@@ -67,15 +78,14 @@ export class PostsService {
     }
   }
 
-  async findAll(): Promise<Post[]> {
-  return this.postModel
-    .find()
-    .populate('usuario_id', 'nombre username foto_perfil') 
-    .exec();
-}
+  /*async findAll(): Promise<Post[]> {
+    return this.postModel
+      .find()
+      .populate('usuario_id', 'nombre username foto_perfil')
+      .exec();
+  }*/
 
-
-  async findOne(id: string): Promise<Post> {
+  async findOne(id: string): Promise<PostDocument> {
     const post = await this.postModel.findById(new Types.ObjectId(id)).exec();
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -83,14 +93,15 @@ export class PostsService {
     return post;
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
+  async update(
+    id: string,
+    updatePostDto: UpdatePostDto,
+  ): Promise<PostDocument> {
     const { comentarios, ...allowedFields } = updatePostDto;
 
-    const updatedPost = await this.postModel.findByIdAndUpdate(
-      new Types.ObjectId(id),
-      allowedFields,
-      { new: true }
-    ).exec();
+    const updatedPost = await this.postModel
+      .findByIdAndUpdate(new Types.ObjectId(id), allowedFields, { new: true })
+      .exec();
 
     if (!updatedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -98,8 +109,10 @@ export class PostsService {
     return updatedPost;
   }
 
-  async remove(id: string): Promise<Post> {
-    const deletedPost = await this.postModel.findByIdAndDelete(new Types.ObjectId(id)).exec();
+  async remove(id: string): Promise<PostDocument> {
+    const deletedPost = await this.postModel
+      .findByIdAndDelete(new Types.ObjectId(id))
+      .exec();
     if (!deletedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -108,8 +121,8 @@ export class PostsService {
 
   async addComment(
     id: string,
-    comment: { usuario_id: string; comentario: string; fecha_comentario: Date }
-  ): Promise<Post> {
+    comment: { usuario_id: string; comentario: string; fecha_comentario: Date },
+  ): Promise<PostDocument> {
     const post = await this.findOne(id);
     post.comentarios.push({
       ...comment,
@@ -119,11 +132,34 @@ export class PostsService {
     return post.save();
   }
 
-  async removeComment(id: string, commentId: string): Promise<Post> {
+  async removeComment(id: string, commentId: string): Promise<PostDocument> {
     const post = await this.findOne(id);
     post.comentarios = post.comentarios.filter(
-      (comment) => !comment._id.equals(new Types.ObjectId(commentId))
+      (comment) => !comment._id.equals(new Types.ObjectId(commentId)),
     );
     return post.save();
   }
+
+  async findAllWithLikedFlag(userId: string): Promise<any[]> {
+  const posts = await this.postModel
+    .find()
+    .populate('usuario_id')
+    .lean(); // convierte a objetos JS puros
+
+  return posts.map((post) => ({
+    ...post,
+    liked: post.likes?.some((id) => id.toString() === userId),
+  }));
+}
+
+  async getPostsPaginated(
+    paginationParameters: PaginationParameters,
+  ): Promise<PostDocument[]> {
+    return this.postsRepository.getPostsPaginated(paginationParameters);
+  }
+
+  async countPosts(params?: PaginationParameters): Promise<number> {
+  return this.postsRepository.countPosts(params);
+}
+
 }

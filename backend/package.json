@@ -32,6 +32,7 @@
     "@nestjs/swagger": "^11.0.7",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@types/passport-local": "^1.0.38",
+    "ansi-regex": "^6.1.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",

@@ -3,14 +3,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
+import { LikesModule } from './likes/likes.module'; // Importar LikesModule
+import { FavoritesModule } from './favorites/favorites.module'; // Importar FavoritesModule
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Connection } from 'mongoose';
-import { ConfigModule } from '@nestjs/config';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URI as string, {
       connectionFactory: (connection: Connection) => {
         connection.once('open', () => {
@@ -25,6 +26,9 @@ import { ConfigModule } from '@nestjs/config';
     UsersModule,
     PostsModule,
     AuthModule,
+    LikesModule,
+    FavoritesModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

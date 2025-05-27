@@ -18,6 +18,7 @@ import Constants from 'expo-constants';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from 'jwt-decode';
 import { useCallback } from "react";
+import { Icon } from "react-native-elements";
 
 export default function Login() {
   const API_URL = Constants.expoConfig.extra.API_URL;
@@ -28,6 +29,7 @@ export default function Login() {
   });
 
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -127,18 +129,29 @@ export default function Login() {
         ) : null}
       </View>
 
-      <View>
+      <View style={styles.inputContainerPass}>
         <TextInput
-          style={styles.input}
+          style={styles.inputPass}
           placeholder="Contraseña"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           onChangeText={(text) => onChange(text, "password")}
           value={formData.password}
         />
-        {errors.password ? (
-          <CustomText style={styles.errorText}>{errors.password}</CustomText>
-        ) : null}
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.iconPass}
+        >
+          <Icon
+            type="material-community"
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            color="#333"
+            size={20}
+          />
+        </TouchableOpacity>
       </View>
+      {errors.password ? (
+        <CustomText style={styles.errorText}>{errors.password}</CustomText>
+      ) : null}
 
       <TouchableOpacity onPress={() => router.push("/RecoverPassword")}>
         <CustomText>¿Olvidaste tu contraseña?</CustomText>
@@ -173,6 +186,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  inputContainerPass: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 40,
+    width: 220,
+    borderRadius: 50,
+    margin: 12,
+    borderWidth: 2,
+    marginBottom: 2,
+    paddingLeft: "5%",
+  },
+  inputPass: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingRight: 40,
+  },
+
+  iconPass: {
+    position: "absolute",
+    right: 10,
+    padding: 5,
   },
   img: {
     width: 100,

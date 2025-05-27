@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
-  ScrollView,
   StyleSheet,
   BackHandler,
   Platform,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
@@ -12,50 +14,43 @@ import Post from "../src/components/Post";
 import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import { useGetPosts } from "../app/pagination/useGetPosts";
+
+const API_URL =
+  Constants.expoConfig?.extra?.API_URL ||
+  Constants.manifest?.extra?.API_URL ||
+  "";
 
 const Home = () => {
-  const [posts, setPosts] = useState([]);
-  const API_URL = Constants.expoConfig.extra.API_URL;
+  const [token, setToken] = useState(null);
+  const [seguidoIds, setSeguidoIds] = useState([]);
+  const [userId, setUserId] = useState(null);
+
+  // Solo carga ids de seguidos una vez
+  const loadTokenAndSeguidos = async () => {
+    try {
+      const storedToken = await AsyncStorage.getItem("accessToken");
+      const storedUserId = await AsyncStorage.getItem("userId");
+      setToken(storedToken);
+      setUserId(storedUserId);
+      if (storedToken && storedUserId) {
+        const res = await fetch(`${API_URL}/users/${storedUserId}/seguidos`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        });
+        const seguidos = await res.json();
+        setSeguidoIds(seguidos.map((u) => u._id));
+      }
+    } catch (e) {
+      setSeguidoIds([]);
+    }
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      const token = await AsyncStorage.getItem("accessToken");
-      const userId = await AsyncStorage.getItem("userId");
-      if (!token) return;
-
-      try {
-        const response = await fetch(`${API_URL}/posts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          console.error("❌ La respuesta de /posts no es un array:", data);
-          return;
-        }
-
-       const enrichedPosts = data
-      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)) 
-      .map((p) => ({
-        ...p,
-        usuario_id: p.usuario_id.nombre || p.usuario_id.username || "Usuario",
-        userAvatar: p.usuario_id.foto_perfil || undefined,
-        image: p.fotos?.[0] || undefined,
-        description: p.descripcion,
-        date: new Date(p.fecha_creacion).toLocaleDateString("es-MX"),
-      }));
-
-        setPosts(enrichedPosts);
-      } catch (err) {
-        console.error("Error al cargar publicaciones:", err);
-      }
-    };
-
-    fetchPosts();
+    loadTokenAndSeguidos();
   }, []);
+
+  // <<--- SOLO USA EL HOOK AQUÍ Y LISTO --->
+  const { posts, getNextPosts, loading, refreshPosts } = useGetPosts(token, seguidoIds);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,19 +63,37 @@ const Home = () => {
       };
 
       BackHandler.addEventListener("hardwareBackPress", onBackPress);
-      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
     }, [])
   );
+
+  const renderFooter = () => {
+    if (loading && posts.length > 0) {
+      return <ActivityIndicator style={{ marginVertical: 20 }} />;
+    }
+    return null;
+  };
 
   return (
     <View style={styles.container}>
       <Header />
       <View style={styles.contentArea}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 60 }}>
-          {posts.map((item, i) => (
-            <Post key={i} post={item} />
-          ))}
-        </ScrollView>
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <Post post={item} />}
+          onEndReached={() => {
+            if (!loading) {
+              getNextPosts();
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refreshPosts} />
+          }
+          ListFooterComponent={renderFooter}
+        />
       </View>
       <BottomNavigation />
     </View>
@@ -90,7 +103,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   contentArea: {
     flex: 1,
@@ -99,61 +112,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingBottom: 10,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    backgroundColor: "#d1d1d1", // gray-300
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#a0a0a0", // gray-400
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  username: {
-    marginLeft: 8,
-    width: 96,
-    height: 16,
-    backgroundColor: "#000",
-    borderRadius: 4,
-  },
-  postContent: {
-    marginBottom: 12,
-    gap: 8,
-  },
-  textLine: {
-    width: "100%",
-    height: 16,
-    backgroundColor: "#000",
-    borderRadius: 4,
-  },
-  imageContainer: {
-    borderWidth: 1,
-    borderColor: "#a0a0a0", // gray-400
-    borderRadius: 4,
-    marginBottom: 12,
-    padding: 16,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  postImage: {
-    height: 100,
-    position: "relative",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#a0a0a0", // gray-400
-    marginBottom: 12,
-  },
-  interactions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
   },
 });
 

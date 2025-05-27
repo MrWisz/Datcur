@@ -4,6 +4,8 @@ import React, { useEffect, useCallback } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ExpoRouter } from "expo-router";
+import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import CustomToast from "./src/components/CustomToast"; 
 
 export default function App() {
 
@@ -28,12 +30,17 @@ export default function App() {
 
   if (!fontsLoaded) return null;
   return (
-    <View onLayout={onLayout} style={{ flex: 1 }}>
-      <FontProvider>
-        <ExpoRouter />
-      </FontProvider>
-    </View>
-  );
+  <View onLayout={onLayout} style={{ flex: 1 }}>
+    <FontProvider>
+      <ExpoRouter />
+      <Toast
+        config={{
+          customToast: (props) => <CustomToast {...props} />,
+        }}
+      />
+    </FontProvider>
+  </View>
+);
 }
 
 // Componente FontProvider

@@ -1,24 +1,59 @@
 import CustomText from "./CustomText";
-import { router } from "expo-router";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
-const ActionsFollower = () => {
+const ActionsFollower = ({ activeTab = "posts", onTabChange }) => {
   return (
     <View style={styles.bottomNav}>
-      <TouchableOpacity>
-        <Icon name="book" size={32} color="#000" />
-        <CustomText>Publicaciones</CustomText>
+      <TouchableOpacity
+        style={styles.action}
+        onPress={() => onTabChange && onTabChange("posts")}
+      >
+        <Icon
+          name="book"
+          size={32}
+          color={activeTab === "posts" ? "#FFC000" : "#000"}
+        />
+        <CustomText style={[
+          styles.text,
+          activeTab === "posts" && styles.activeText
+        ]}>
+          Publicaciones
+        </CustomText>
       </TouchableOpacity>
 
-      <TouchableOpacity>
-        <Icon name="users" size={32} color="#000" />
-        <CustomText>Seguidores</CustomText>
+      <TouchableOpacity
+        style={styles.action}
+        onPress={() => onTabChange && onTabChange("followers")}
+      >
+        <Icon
+          name="users"
+          size={32}
+          color={activeTab === "followers" ? "#FFC000" : "#000"}
+        />
+        <CustomText style={[
+          styles.text,
+          activeTab === "followers" && styles.activeText
+        ]}>
+          Seguidores
+        </CustomText>
       </TouchableOpacity>
 
-      <TouchableOpacity>
-        <Icon name="users" size={32} color="#000" />
-        <CustomText>Seguidos</CustomText>
+      <TouchableOpacity
+        style={styles.action}
+        onPress={() => onTabChange && onTabChange("following")}
+      >
+        <Icon
+          name="users"
+          size={32}
+          color={activeTab === "following" ? "#FFC000" : "#000"}
+        />
+        <CustomText style={[
+          styles.text,
+          activeTab === "following" && styles.activeText
+        ]}>
+          Seguidos
+        </CustomText>
       </TouchableOpacity>
     </View>
   );
@@ -26,39 +61,25 @@ const ActionsFollower = () => {
 
 const styles = StyleSheet.create({
   bottomNav: {
-    height: 56,
-    backgroundColor: "#fff",
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,
-    //borderTopWidth: 1,
-    borderTopColor: "#38BDF8", // sky-400
+    backgroundColor: "transparent",
   },
-  editIconContainer: {
-    position: "relative",
-  },
-  plusBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    width: 12,
-    height: 12,
-    backgroundColor: "#fff",
-    borderRadius: 6,
+  action: {
     alignItems: "center",
-    justifyContent: "center",
+    marginHorizontal: 20,
   },
-  plusText: {
-    color: "#000",
-    fontSize: 10,
+  text: {
+    fontSize: 15,
+    fontFamily: "Comic-Bold",
+    color: "#333",
+    marginTop: 2,
+  },
+  activeText: {
+    color: "#FFC000",
     fontWeight: "bold",
-  },
-  profileIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: "#000",
-    borderRadius: 12,
   },
 });
 
