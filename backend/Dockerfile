@@ -12,4 +12,5 @@ RUN echo "CONTENIDO DIST:" && ls -l /app/dist
 
 EXPOSE 3000
 
-CMD ["node", "--max-old-space-size=512", "dist/main"]
+CMD ["node", "--max-old-space-size=512", "dist/src/main"]
+
