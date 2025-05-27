@@ -14,7 +14,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Post.name) private postModel: Model<Post>,
     private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async updatePhoto(userId: string, imageUrl: string) {
     const secureUrl = await this.cloudinaryService.uploadImage(imageUrl);
@@ -119,35 +119,45 @@ export class UsersService {
   }
 
   async follow(id: string, userId: string): Promise<User> {
-    const user = await this.findOne(id);
-    if (!user.seguidos.includes(new Types.ObjectId(userId))) {
-      user.seguidos.push(new Types.ObjectId(userId));
-      await user.save();
+    // id: usuario a seguir (perfil visitado)
+    // userId: usuario logueado (quiere seguir al "id")
+
+    // 1. Agrega "id" a seguidos del usuario logueado
+    const followerUser = await this.findOne(userId);
+    if (!followerUser.seguidos.includes(new Types.ObjectId(id))) {
+      followerUser.seguidos.push(new Types.ObjectId(id));
+      await followerUser.save();
     }
 
-    const followedUser = await this.findOne(userId);
-    if (!followedUser.seguidores.includes(new Types.ObjectId(id))) {
-      followedUser.seguidores.push(new Types.ObjectId(id));
+    // 2. Agrega "userId" a seguidores del usuario visitado
+    const followedUser = await this.findOne(id);
+    if (!followedUser.seguidores.includes(new Types.ObjectId(userId))) {
+      followedUser.seguidores.push(new Types.ObjectId(userId));
       await followedUser.save();
     }
 
-    return user;
+    return followedUser;
   }
 
   async unfollow(id: string, userId: string): Promise<User> {
-    const user = await this.findOne(id);
-    user.seguidos = user.seguidos.filter(
-      (followedId) => !followedId.equals(new Types.ObjectId(userId))
-    );
-    await user.save();
+    // id: usuario a dejar de seguir (perfil visitado)
+    // userId: usuario logueado (quiere dejar de seguir al "id")
 
-    const unfollowedUser = await this.findOne(userId);
+    // 1. Remueve "id" de seguidos del usuario logueado
+    const followerUser = await this.findOne(userId);
+    followerUser.seguidos = followerUser.seguidos.filter(
+      (followedId) => !followedId.equals(new Types.ObjectId(id))
+    );
+    await followerUser.save();
+
+    // 2. Remueve "userId" de seguidores del usuario visitado
+    const unfollowedUser = await this.findOne(id);
     unfollowedUser.seguidores = unfollowedUser.seguidores.filter(
-      (followerId) => !followerId.equals(new Types.ObjectId(id))
+      (followerId) => !followerId.equals(new Types.ObjectId(userId))
     );
     await unfollowedUser.save();
 
-    return user;
+    return unfollowedUser;
   }
 
   async getFollowers(id: string): Promise<User[]> {
@@ -172,11 +182,11 @@ export class UsersService {
     console.log("🧪 getProfileWithPosts() → userId recibido:", userId);
     let objectId: Types.ObjectId;
 
-  try {
-    objectId = new Types.ObjectId(userId);
-  } catch (err) {
-    throw new BadRequestException("ID de usuario inválido");
-  }
+    try {
+      objectId = new Types.ObjectId(userId);
+    } catch (err) {
+      throw new BadRequestException("ID de usuario inválido");
+    }
 
     const user = await this.userModel
       .findById(userId)

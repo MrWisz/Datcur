@@ -128,8 +128,8 @@ export default function Register() {
     const userData = await response.json();
 
     if (!response.ok) {
-      alert("Error al registrar usuario: " + userData.message);
-      return;
+      alert("Error al registrar usuario: " + (userData.message || JSON.stringify(userData) || response.status));
+  return;
     }
 
     // 2. Login automático

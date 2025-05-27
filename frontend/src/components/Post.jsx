@@ -49,6 +49,28 @@ export default function Post({ post, isOwnProfile, onPostUpdated, onPostDeleted 
     setEditText(post.descripcion);
   }, [post.descripcion]);
 
+  useEffect(() => {
+    const checkIfLiked = async () => {
+      const userId = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!userId || !token) return;
+
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const res = await fetch(
+          `${API_URL}/likes/by-user/${userId}/post/${post._id}`,
+          { headers }
+        );
+        const like = await res.json();
+        setLiked(!!like && !!like._id);
+      } catch (e) {
+        setLiked(false);
+      }
+    };
+
+    checkIfLiked();
+  }, [post._id]);
+
   // Eliminar post
   const handleDelete = async () => {
     try {
@@ -343,12 +365,12 @@ export default function Post({ post, isOwnProfile, onPostUpdated, onPostDeleted 
           <Text style={styles.date}>
             {post.fecha_creacion
               ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : ""}
           </Text>
         </View>
