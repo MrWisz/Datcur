@@ -68,8 +68,15 @@ const Home = () => {
       <View style={styles.contentArea}>
         <FlatList
           data={posts}
-          keyExtractor={(item) => item._id} 
-          renderItem={({ item }) => <Post post={item} />}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <Post
+              post={item}
+              onCommentIconPress={() =>
+                router.push(`/PostIndividual?postId=${item._id}`)
+              }
+            />
+          )}
           onEndReached={() => {
             if (!loading) {
               getNextPosts();

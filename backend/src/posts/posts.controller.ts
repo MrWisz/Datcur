@@ -49,10 +49,9 @@ export class PostsController {
   }
 
   @Get('count')
-async countPosts(@Query() params: PaginationParameters): Promise<number> {
-  return this.postsService.countPosts(params);
-}
-
+  async countPosts(@Query() params: PaginationParameters): Promise<number> {
+    return this.postsService.countPosts(params);
+  }
 
   /*@Get(':id')
   async findAll(@Req() req: Request): Promise<PostDocument[]> {
@@ -82,7 +81,23 @@ async countPosts(@Query() params: PaginationParameters): Promise<number> {
   async getPostsPaginated(
     @Query() getPostsParameters: PaginationParameters,
   ): Promise<PostDocument[]> {
-    console.log("Query completa recibida:", getPostsParameters);
+    console.log('Query completa recibida:', getPostsParameters);
     return this.postsService.getPostsPaginated(getPostsParameters);
+  }
+
+  //maneja los comentarios
+  @Post(':id/comments')
+  async addComment(
+    @Param('id') id: string,
+    @Body() body: { comentario: string },
+    @Req() req: Request,
+  ): Promise<PostDocument> {
+    const usuario_id = req.user?.['userId'];
+    if (!usuario_id) throw new UnauthorizedException('Usuario no autenticado');
+    return this.postsService.addComment(id, {
+      usuario_id,
+      comentario: body.comentario,
+      fecha_comentario: new Date(),
+    });
   }
 }

@@ -40,9 +40,9 @@ function getImageUrl(image) {
   return null;
 }
 
-export default function Post({ post }) {
+export default function Post({ post, onCommentIconPress = null }) {
   const [liked, setLiked] = useState(post.liked || false);
-  // Ya no uses likesCount aquí, solo usa getLikesCount(post.likes) en el render.
+  
   const [saved, setSaved] = useState(post.favorito || false);
 
   useEffect(() => {
@@ -57,7 +57,9 @@ export default function Post({ post }) {
           Authorization: `Bearer ${token}`,
         };
 
-        const res = await fetch(`${API_URL}/favorites/user/${userId}`, { headers });
+        const res = await fetch(`${API_URL}/favorites/user/${userId}`, {
+          headers,
+        });
         const favorites = await res.json();
 
         const isSaved = favorites.some(
@@ -100,7 +102,8 @@ export default function Post({ post }) {
         if (res.ok) {
           setLiked(true);
           // Si post.likes es un array, simula agregar uno extra localmente:
-          if (Array.isArray(post.likes)) post.likes = [...post.likes, { userId, postId: post._id }];
+          if (Array.isArray(post.likes))
+            post.likes = [...post.likes, { userId, postId: post._id }];
           else if (typeof post.likes === "number") post.likes += 1;
           else post.likes = 1;
           Toast.show({
@@ -131,7 +134,8 @@ export default function Post({ post }) {
             setLiked(false);
             // Resta localmente el like (según cómo venga post.likes)
             if (Array.isArray(post.likes)) post.likes = post.likes.slice(0, -1);
-            else if (typeof post.likes === "number" && post.likes > 0) post.likes -= 1;
+            else if (typeof post.likes === "number" && post.likes > 0)
+              post.likes -= 1;
             else post.likes = 0;
             Toast.show({
               type: "customToast",
@@ -208,8 +212,7 @@ export default function Post({ post }) {
 
         const favorite = favorites.find(
           (f) =>
-            (f.postId && f.postId._id === post._id) ||
-            f.postId === post._id
+            (f.postId && f.postId._id === post._id) || f.postId === post._id
         );
 
         if (!favorite || !favorite._id) {
@@ -249,26 +252,15 @@ export default function Post({ post }) {
   };
 
   // Comentarios
-  const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([]);
-
-  const handleSendComment = () => {
-    if (commentText.trim()) {
-      setComments((prev) => [...prev, commentText.trim()]);
-      setCommentText("");
-      Toast.show({
-        type: "customToast",
-        text1: "Exito",
-        text2: "Enviado",
-        visibilityTime: 3000,
-      });
-    }
-  };
+  //se maneja en postIndividual 
 
   // Navegación segura
   const handleProfilePress = () => {
-    if (post.usuario_id && typeof post.usuario_id === "object" && post.usuario_id._id) {
+    if (
+      post.usuario_id &&
+      typeof post.usuario_id === "object" &&
+      post.usuario_id._id
+    ) {
       router.push(`/Profile?userId=${post.usuario_id._id}`);
     } else if (typeof post.usuario_id === "string") {
       Toast.show({ type: "info", text1: "Perfil no disponible" });
@@ -320,7 +312,11 @@ export default function Post({ post }) {
           <Text style={styles?.actionText}>{getLikesCount(post.likes)}</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={postInd}
+          onPress={
+            onCommentIconPress
+              ? () => postInd(post)
+              : goToPostIndividual
+          }
           style={styles?.actionBtn}
         >
           <Icon name="message-circle" size={20} color="#333" />
@@ -329,19 +325,6 @@ export default function Post({ post }) {
           <Icon name="star" size={20} color={saved ? "#FFC107" : "#333"} />
         </TouchableOpacity>
       </View>
-      {showComments && (
-        <View style={styles?.commentBox}>
-          <TextInput
-            style={[styles?.input, { fontFamily: "Comic-Bold" }]}
-            placeholder="Escribe un comentario..."
-            value={commentText}
-            onChangeText={setCommentText}
-          />
-          <TouchableOpacity onPress={handleSendComment}>
-            <Icon name="send" size={20} />
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
