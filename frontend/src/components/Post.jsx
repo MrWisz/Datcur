@@ -10,9 +10,15 @@ import Icon from "react-native-vector-icons/Feather";
 import CustomText from "./CustomText";
 import Toast from "react-native-toast-message";
 import { router } from "expo-router";
-import { API_URL } from '@env';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
+import Constants from "expo-constants";
+
+const API_URL =
+  Constants.expoConfig?.extra?.API_URL ||
+  Constants.manifest?.extra?.API_URL ||
+  "";
+
 
 
 // Normaliza el contador de likes

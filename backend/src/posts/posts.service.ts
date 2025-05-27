@@ -158,7 +158,8 @@ export class PostsService {
     return this.postsRepository.getPostsPaginated(paginationParameters);
   }
 
-  async countPosts(): Promise<number> {
-    return this.postsRepository.countPosts();
-  }
+  async countPosts(params?: PaginationParameters): Promise<number> {
+  return this.postsRepository.countPosts(params);
+}
+
 }

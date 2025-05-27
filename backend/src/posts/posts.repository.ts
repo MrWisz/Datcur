@@ -10,35 +10,39 @@ export class PostsRepository {
     @InjectModel(Post.name) private readonly PostsModel: Model<PostDocument>,
   ) {}
 
-  /*async getPostsPaginated(paginationParameters: PaginationParameters): Promise<PostDocument[]> {
-    return this.PostsModel.find(
-      {},
-      {},
-      {
-        lean: true,
-        sort: {
-          postsDate: -1,
-        },
-        ...paginationParameters,
-      },
-    ).exec();
-  }*/
-
   async getPostsPaginated({
     limit,
     skip,
+    userId,
   }: PaginationParameters): Promise<PostDocument[]> {
+    const query: any = {};
+    if (userId) {
+      try {
+        query.usuario_id = new Types.ObjectId(userId);
+      } catch {
+        query.usuario_id = userId; // fallback
+      }
+    }
+    console.log('🟠 QUERY DE POSTS:', query);
     return this.PostsModel
-      .find()
-      .sort({ fecha_creacion: -1 }) 
+      .find(query)
+      .sort({ fecha_creacion: -1 })
       .skip(skip || 0)
-      .limit(limit || 2)
-      .populate('usuario_id', 'nombre username foto_perfil') 
-      .lean() 
+      .limit(limit || 10)
+      .populate('usuario_id', 'nombre username foto_perfil')
+      .lean()
       .exec();
   }
 
-  async countPosts(): Promise<number> {
-    return this.PostsModel.countDocuments({});
+  async countPosts(params?: PaginationParameters): Promise<number> {
+    const query: any = {};
+    if (params?.userId) {
+      try {
+        query.usuario_id = new Types.ObjectId(params.userId);
+      } catch {
+        query.usuario_id = params.userId;
+      }
+    }
+    return this.PostsModel.countDocuments(query);
   }
 }
