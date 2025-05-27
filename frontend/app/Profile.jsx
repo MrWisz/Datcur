@@ -74,14 +74,29 @@ const Profile = () => {
     })();
   }, [userId, token]);
 
-
+  // Obtener posts
   const { posts, getNextPosts, loading, refreshPosts } = useGetPostsByUser(userId, token);
 
+  // Local para edición/eliminación
+  const [postList, setPostList] = useState([]);
 
+  useEffect(() => {
+    setPostList(posts);
+  }, [posts]);
 
+  // Actualizar post editado
+  const handlePostUpdated = (postId, newDesc) => {
+    setPostList((prev) =>
+      prev.map((p) => (p._id === postId ? { ...p, descripcion: newDesc } : p))
+    );
+  };
+
+  // Eliminar post de la lista
+  const handlePostDeleted = (postId) => {
+    setPostList((prev) => prev.filter((p) => p._id !== postId));
+  };
 
   const toggleFollow = () => setIsFollowing((prev) => !prev);
-
 
   useEffect(() => {
     const backAction = () => {
@@ -95,9 +110,7 @@ const Profile = () => {
     return () => backHandler.remove();
   }, []);
 
-  // Loader y vacío bien definidos: 
-  // Si está cargando y aún no hay posts, muestra loader. 
-  // Si no está cargando y no hay posts, muestra “Sin posts.”
+  // Loader y vacío bien definidos
   const renderListEmptyComponent = () =>
     loading ? (
       <ActivityIndicator size="large" style={{ marginTop: 50 }} />
@@ -107,9 +120,8 @@ const Profile = () => {
       </CustomText>
     );
 
-
   const renderFooter = () =>
-    loading && posts.length > 0 ? (
+    loading && postList.length > 0 ? (
       <ActivityIndicator style={{ marginVertical: 20 }} />
     ) : null;
 
@@ -149,12 +161,16 @@ const Profile = () => {
                 </CustomText>
               </View>
             }
-            data={posts}
+            data={postList}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => {
-              console.log("RENDER ITEM:", item);
-              return <Post post={item} />;
-            }}
+            renderItem={({ item }) => (
+              <Post
+                post={item}
+                isOwnProfile={isOwnProfile}
+                onPostUpdated={handlePostUpdated}
+                onPostDeleted={handlePostDeleted}
+              />
+            )}
             onEndReached={() => {
               if (!loading) getNextPosts();
             }}

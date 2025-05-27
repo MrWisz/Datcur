@@ -19,31 +19,88 @@ const API_URL =
   Constants.manifest?.extra?.API_URL ||
   "";
 
-
-
 // Normaliza el contador de likes
 function getLikesCount(likes) {
   if (Array.isArray(likes)) return likes.length;
   if (typeof likes === "number") return likes;
-  if (typeof likes === "string" && likes.trim() !== "") return 1; // Si es un id de like, cuenta como 1
+  if (typeof likes === "string" && likes.trim() !== "") return 1;
   if (typeof likes === "object" && likes !== null && likes._id) return 1;
   return 0;
 }
 
-// Construye la URL de imagen aunque solo sea un path
 function getImageUrl(image) {
   if (typeof image === "string" && image.trim() !== "") {
     if (image.startsWith("http")) return image;
-    // Si solo es un path relativo, lo convierte a URL absoluta
     return `${API_URL.replace(/\/$/, "")}/${image.replace(/^\/+/, "")}`;
   }
   return null;
 }
 
-export default function Post({ post }) {
+export default function Post({ post, isOwnProfile, onPostUpdated, onPostDeleted }) {
   const [liked, setLiked] = useState(post.liked || false);
-  // Ya no uses likesCount aquí, solo usa getLikesCount(post.likes) en el render.
   const [saved, setSaved] = useState(post.favorito || false);
+
+  // NUEVO: para editar/eliminar
+  const [showOptions, setShowOptions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(post.descripcion);
+
+  useEffect(() => {
+    setEditText(post.descripcion);
+  }, [post.descripcion]);
+
+  // Eliminar post
+  const handleDelete = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Toast.show({ type: "error", text1: "Sesión no válida" });
+        return;
+      }
+      const res = await fetch(`${API_URL}/posts/${post._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        Toast.show({ type: "success", text1: "Publicación eliminada" });
+        onPostDeleted && onPostDeleted(post._id);
+      } else {
+        Toast.show({ type: "error", text1: "Error al eliminar" });
+      }
+    } catch (e) {
+      Toast.show({ type: "error", text1: "Error inesperado" });
+    }
+    setShowOptions(false);
+  };
+
+  // Editar post
+  const handleEdit = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Toast.show({ type: "error", text1: "Sesión no válida" });
+        return;
+      }
+      const res = await fetch(`${API_URL}/posts/${post._id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ descripcion: editText }),
+      });
+      if (res.ok) {
+        Toast.show({ type: "success", text1: "Publicación actualizada" });
+        setIsEditing(false);
+        onPostUpdated && onPostUpdated(post._id, editText);
+      } else {
+        Toast.show({ type: "error", text1: "Error al editar" });
+      }
+    } catch (e) {
+      Toast.show({ type: "error", text1: "Error inesperado" });
+    }
+    setShowOptions(false);
+  };
 
   useEffect(() => {
     const checkIfSaved = async () => {
@@ -99,7 +156,6 @@ export default function Post({ post }) {
 
         if (res.ok) {
           setLiked(true);
-          // Si post.likes es un array, simula agregar uno extra localmente:
           if (Array.isArray(post.likes)) post.likes = [...post.likes, { userId, postId: post._id }];
           else if (typeof post.likes === "number") post.likes += 1;
           else post.likes = 1;
@@ -129,7 +185,6 @@ export default function Post({ post }) {
 
           if (res.ok) {
             setLiked(false);
-            // Resta localmente el like (según cómo venga post.likes)
             if (Array.isArray(post.likes)) post.likes = post.likes.slice(0, -1);
             else if (typeof post.likes === "number" && post.likes > 0) post.likes -= 1;
             else post.likes = 0;
@@ -179,7 +234,6 @@ export default function Post({ post }) {
       };
 
       if (!saved) {
-        // ➕ Agregar a favoritos
         const res = await fetch(`${API_URL}/favorites`, {
           method: "POST",
           headers,
@@ -200,7 +254,6 @@ export default function Post({ post }) {
           });
         }
       } else {
-        // ❌ Buscar favorito actual y eliminarlo
         const resList = await fetch(`${API_URL}/favorites/user/${userId}`, {
           headers,
         });
@@ -279,49 +332,104 @@ export default function Post({ post }) {
 
   return (
     <View style={styles?.card}>
-      <View style={styles?.header}>
+      <View style={styles.header}>
         <Image source={{ uri: post.usuario_id?.foto_perfil }} style={styles.avatar} />
-        <TouchableOpacity onPress={handleProfilePress}>
-          <CustomText style={styles?.username}>
-            {post.usuario_id?.nombre || post.usuario_id || "Usuario"}
-          </CustomText>
-        </TouchableOpacity>
-        <Text style={[styles.date, { fontSize: 11 }]}>
-          {post.fecha_creacion
-            ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-            : ""}
-        </Text>
-
+        <View style={{ flex: 1, flexDirection: "column" }}>
+          <TouchableOpacity onPress={handleProfilePress}>
+            <CustomText style={styles.username}>
+              {post.usuario_id?.nombre || post.usuario_id || "Usuario"}
+            </CustomText>
+          </TouchableOpacity>
+          <Text style={styles.date}>
+            {post.fecha_creacion
+              ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : ""}
+          </Text>
+        </View>
+        {isOwnProfile && (
+          <TouchableOpacity
+            onPress={() => setShowOptions(!showOptions)}
+            style={{ marginLeft: 4, zIndex: 2, padding: 5 }}
+          >
+            <Text style={{ fontSize: 22 }}>⋮</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      <CustomText style={styles?.description}>{post.descripcion}</CustomText>
+
+      {/* --- EDIT/DELETE ZONA --- */}
+      {isEditing ? (
+        <>
+          <TextInput
+            value={editText}
+            onChangeText={setEditText}
+            style={[styles.input, { marginTop: 8, width: "100%" }]}
+            multiline
+          />
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+            <TouchableOpacity onPress={handleEdit} style={[styles.actionBtn, { backgroundColor: "#FFC000", borderRadius: 8, padding: 6 }]}>
+              <Text style={{ color: "#222" }}>Guardar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setIsEditing(false); setEditText(post.descripcion); }} style={[styles.actionBtn, { backgroundColor: "#eee", borderRadius: 8, padding: 6 }]}>
+              <Text>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <>
+          <CustomText style={styles.description}>{post.descripcion}</CustomText>
+          {showOptions && (
+            <View style={{
+              position: "absolute",
+              top: 45,
+              right: 10,
+              backgroundColor: "#fff",
+              borderRadius: 10,
+              padding: 10,
+              elevation: 6,
+              zIndex: 3
+            }}>
+              <TouchableOpacity onPress={() => { setIsEditing(true); setShowOptions(false); }}>
+                <Text style={{ fontSize: 16 }}>Editar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete}>
+                <Text style={{ color: "red", fontSize: 16, marginTop: 6 }}>Eliminar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowOptions(false)}>
+                <Text style={{ marginTop: 6 }}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
+      )}
+
       {post.fotos && post.fotos[0] && (
         <Image source={{ uri: post.fotos[0] }} style={styles.postImage} />
       )}
-      <View style={styles?.interactions}>
-        <TouchableOpacity onPress={toggleLike} style={styles?.actionBtn}>
+      <View style={styles.interactions}>
+        <TouchableOpacity onPress={toggleLike} style={styles.actionBtn}>
           <Icon name="heart" size={20} color={liked ? "red" : "#333"} />
-          <Text style={styles?.actionText}>{getLikesCount(post.likes)}</Text>
+          <Text style={styles.actionText}>{getLikesCount(post.likes)}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowComments(!showComments)}
-          style={styles?.actionBtn}
+          style={styles.actionBtn}
         >
           <Icon name="message-circle" size={20} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={toggleSave} style={styles?.actionBtn}>
+        <TouchableOpacity onPress={toggleSave} style={styles.actionBtn}>
           <Icon name="star" size={20} color={saved ? "#FFC107" : "#333"} />
         </TouchableOpacity>
       </View>
       {showComments && (
-        <View style={styles?.commentBox}>
+        <View style={styles.commentBox}>
           <TextInput
-            style={[styles?.input, { fontFamily: "Comic-Bold" }]}
+            style={[styles.input, { fontFamily: "Comic-Bold" }]}
             placeholder="Escribe un comentario..."
             value={commentText}
             onChangeText={setCommentText}
@@ -334,7 +442,6 @@ export default function Post({ post }) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   card: {
@@ -350,6 +457,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 5,
+    position: "relative",
+    paddingRight: 8,
   },
   avatar: {
     width: 35,
@@ -387,10 +496,11 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   date: {
-    marginLeft: "auto",
-    alignSelf: "center",
     fontSize: 11,
     color: "#888",
+    marginTop: 1,
+    marginLeft: 1,
+    fontFamily: "ComicNeue",
   },
   commentBox: {
     flexDirection: "row",
