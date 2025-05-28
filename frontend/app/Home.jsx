@@ -14,30 +14,43 @@ import Post from "../src/components/Post";
 import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import axios from "axios";
 import { useGetPosts } from "../app/pagination/useGetPosts";
 
+const API_URL =
+  Constants.expoConfig?.extra?.API_URL ||
+  Constants.manifest?.extra?.API_URL ||
+  "";
+
 const Home = () => {
-
-  //const API_URL = Constants.expoConfig.extra.API_URL;
   const [token, setToken] = useState(null);
+  const [seguidoIds, setSeguidoIds] = useState([]);
+  const [userId, setUserId] = useState(null);
 
-  const loadToken = async () => {
+  // Solo carga ids de seguidos una vez
+  const loadTokenAndSeguidos = async () => {
     try {
-      const storedToken = await AsyncStorage.getItem("accessToken"); 
-      if (storedToken) {
-        setToken(storedToken);
+      const storedToken = await AsyncStorage.getItem("accessToken");
+      const storedUserId = await AsyncStorage.getItem("userId");
+      setToken(storedToken);
+      setUserId(storedUserId);
+      if (storedToken && storedUserId) {
+        const res = await fetch(`${API_URL}/users/${storedUserId}/seguidos`, {
+          headers: { Authorization: `Bearer ${storedToken}` },
+        });
+        const seguidos = await res.json();
+        setSeguidoIds(seguidos.map((u) => u._id));
       }
     } catch (e) {
-      console.error("Failed to load token from storage", e);
+      setSeguidoIds([]);
     }
   };
 
   useEffect(() => {
-    loadToken(); 
+    loadTokenAndSeguidos();
   }, []);
 
-  const { posts, getNextPosts, loading, refreshPosts } = useGetPosts(token); 
+  // <<--- SOLO USA EL HOOK AQUÍ Y LISTO --->
+  const { posts, getNextPosts, loading, refreshPosts } = useGetPosts(token, seguidoIds);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,7 +81,7 @@ const Home = () => {
       <View style={styles.contentArea}>
         <FlatList
           data={posts}
-          keyExtractor={(item) => item._id} 
+          keyExtractor={(item) => item._id}
           renderItem={({ item }) => <Post post={item} />}
           onEndReached={() => {
             if (!loading) {
@@ -79,6 +92,7 @@ const Home = () => {
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={refreshPosts} />
           }
+          ListFooterComponent={renderFooter}
         />
       </View>
       <BottomNavigation />
