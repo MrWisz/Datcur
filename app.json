@@ -4,10 +4,7 @@
     "slug": "dactur",
     "version": "1.0.0",
     "extra": {
-      "API_URL": "https://datcur.onrender.com",
-      "eas": {
-        "projectId": "78d3b26b-6b53-492b-a6c4-31e0ac8eb7ff"
-      }
+      "API_URL": "https://datcur.onrender.com"
     },
     "android": {
       "package": "com.jenniiramirez22.dactur"
