@@ -545,3 +545,5 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
 });
+
+// se realizo los cambios para renderizar el boton 
