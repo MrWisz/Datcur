@@ -13,7 +13,7 @@ export default function Config() {
     "ComicNeue-Bold": require("../assets/fonts/ComicNeue-Bold.ttf"),
   });
 
-  const router = useRouter(); // ✅ Antes de cualquier hook o lógica
+  const router = useRouter(); 
 
   useEffect(() => {
     const backAction = () => {
@@ -70,7 +70,6 @@ export default function Config() {
           text="Modificar información personal"
           onPress={() => router.push("/ChangeInPersonal")}
         />
-        <MenuItem icon="lightbulb-outline" text="Seguridad" />
         <MenuItem
           icon=""
           text="Salir"

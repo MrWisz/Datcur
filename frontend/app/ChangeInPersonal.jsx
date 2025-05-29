@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -11,38 +11,137 @@ import {
   Keyboard,
 } from "react-native";
 import CustomText from "../src/components/CustomText";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Header from "../src/components/Header";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+
+const API_URL = Constants.expoConfig.extra.API_URL;
 
 export default function ChangeInPersonal() {
   const [formData, setFormData] = useState({
-    direction: "Calle 123",
-    phone: "123456789",
-    email: "usuario@email.com",
+    username: "",
+    calle: "",
+    ciudad: "",
+    pais: "",
+    phone: "",
+    email: "",
   });
+
+  // Cargar datos del usuario al montar el componente
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem("accessToken");
+        const userId = await AsyncStorage.getItem("userId");
+        if (!token || !userId) return;
+
+        const response = await fetch(`${API_URL}/users/${userId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo cargar la información");
+        }
+
+        const user = await response.json();
+
+        setFormData({
+          username: user.username || "",
+          calle: user.direccion?.calle || "",
+          ciudad: user.direccion?.ciudad || "",
+          pais: user.direccion?.pais || "",
+          phone: user.telefono || "",
+          email: user.email || "",
+        });
+      } catch (error) {
+        console.error("Error cargando datos de usuario:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "No se pudo cargar la información del usuario",
+        });
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleChange = (text, field) => {
     setFormData((prev) => ({ ...prev, [field]: text }));
   };
 
-  const handleSubmit = () => {
-    console.log("Datos finales:", formData);
-    // espacio para enviar los datos a la base de datos
-    
-    //mensaje confirmacion
-    Toast.show({
-                type: "customToast",
-                text1: "Exito",
-                text2: "Información modificada con éxito",
-                visibilityTime: 3000,
-                position: "center",
-              });
-        
-            setTimeout(() => {
-              router.push("/Home");
-            }, 3000);
+  const handleSubmit = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const userId = await AsyncStorage.getItem("userId");
+
+      if (!token || !userId) {
+        Toast.show({
+          type: "error",
+          text1: "Sesión no válida",
+        });
+        return;
+      }
+
+      // Validación básica: no dejar campos vacíos
+      if (!formData.username.trim() || !formData.calle.trim() || !formData.ciudad.trim() || !formData.pais.trim()) {
+        Toast.show({
+          type: "error",
+          text1: "Completa todos los campos requeridos",
+        });
+        return;
+      }
+
+      const updateBody = {
+        username: formData.username,
+        direccion: {
+          calle: formData.calle,
+          ciudad: formData.ciudad,
+          pais: formData.pais,
+        },
+        telefono: formData.phone,
+        email: formData.email,
+      };
+
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error backend:", errorText);
+        throw new Error("Error al guardar la información");
+      }
+
+      Toast.show({
+        type: "customToast",
+        text1: "Éxito",
+        text2: "Información modificada con éxito",
+        visibilityTime: 3000,
+        position: "center",
+      });
+
+      setTimeout(() => {
+        router.push("/Home");
+      }, 3000);
+    } catch (error) {
+      console.error("Error guardando información:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No se pudo modificar la información",
+      });
+    }
   };
 
   return (
@@ -58,34 +157,28 @@ export default function ChangeInPersonal() {
               Modificar información personal
             </CustomText>
 
-            {["direction", "phone", "email"].map((field) => {
-              const placeholders = {
-                direction: "Dirección",
-                phone: "Teléfono",
-                email: "Correo",
-              };
-              const keyboardTypes = {
-                phone: "phone-pad",
-                email: "email-address",
-              };
-
-              return (
-                <View key={field}>
-                  <CustomText style={styles.label}>
-                    {placeholders[field]}
-                  </CustomText>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.input}
-                      value={formData[field]}
-                      onChangeText={(text) => handleChange(text, field)}
-                      editable={true}
-                      keyboardType={keyboardTypes[field] || "default"}
-                    />
-                  </View>
+            {[
+              { key: "username", label: "Usuario", keyboardType: "default" },
+              { key: "calle", label: "Calle", keyboardType: "default" },
+              { key: "ciudad", label: "Ciudad", keyboardType: "default" },
+              { key: "pais", label: "País", keyboardType: "default" },
+              { key: "phone", label: "Teléfono", keyboardType: "phone-pad" },
+              { key: "email", label: "Correo", keyboardType: "email-address" },
+            ].map(({ key, label, keyboardType }) => (
+              <View key={key}>
+                <CustomText style={styles.label}>{label}</CustomText>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={formData[key]}
+                    onChangeText={(text) => handleChange(text, key)}
+                    keyboardType={keyboardType}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
                 </View>
-              );
-            })}
+              </View>
+            ))}
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -118,15 +211,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingBottom: 20,
   },
-  title:{
-    fontSize: 30, 
-    marginBottom: "8%", 
-    marginTop:"8%",
-  },
-  img: {
-    width: 100,
-    height: 100,
-    marginBottom: "3%",
+  title: {
+    fontSize: 30,
+    marginBottom: "8%",
+    marginTop: "8%",
   },
   label: {
     fontSize: 16,
@@ -174,10 +262,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Comic-Bold",
     textAlign: "center",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 14,
-    marginBottom: 5,
   },
 });

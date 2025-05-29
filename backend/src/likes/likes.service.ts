@@ -24,7 +24,7 @@ export class LikesService {
 
   await this.postModel.updateOne(
     { _id: postObjectId },
-    { $addToSet: { likes: userObjectId } },
+    { $addToSet: { likes: new Types.ObjectId(userId) } },
     { bypassDocumentValidation: true } 
   );
 

@@ -14,6 +14,13 @@ import { Express } from 'express';
 import { PaginationParameters } from './dto/pagination-parameters.dto';
 import { PostsRepository } from './posts.repository';
 import { PostDocument } from './schemas/post.schema';
+import util from 'util';
+
+function ensureObjectIdArray(array?: any[]): Types.ObjectId[] {
+  if (!Array.isArray(array)) return [];
+  return array.map(id => (id instanceof Types.ObjectId ? id : new Types.ObjectId(id)));
+}
+
 
 @Injectable()
 export class PostsService {
@@ -21,20 +28,27 @@ export class PostsService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly postsRepository: PostsRepository,
-  ) {}
+  ) { }
 
   async create(
     createPostDto: CreatePostDto,
     usuario_id: string,
   ): Promise<PostDocument> {
     try {
+      // 👇 Convierte favoritos/likes si vienen del frontend (opcional pero recomendado)
+      const favoritos = createPostDto['favoritos']
+        ? ensureObjectIdArray(createPostDto['favoritos'])
+        : [];
+      const likes = createPostDto['likes']
+        ? ensureObjectIdArray(createPostDto['likes'])
+        : [];
       const createdPost = new this.postModel({
         ...createPostDto,
         usuario_id: new Types.ObjectId(usuario_id),
         fecha_creacion: createPostDto.fecha_creacion ?? new Date(),
-        likes: [],
+        likes,
         comentarios: [],
-        favoritos: [],
+        favoritos,
       });
       return await createdPost.save();
     } catch (error) {
@@ -78,13 +92,6 @@ export class PostsService {
     }
   }
 
-  /*async findAll(): Promise<Post[]> {
-    return this.postModel
-      .find()
-      .populate('usuario_id', 'nombre username foto_perfil')
-      .exec();
-  }*/
-
   async findOne(id: string): Promise<PostDocument> {
     const post = await this.postModel.findById(new Types.ObjectId(id)).exec();
     if (!post) {
@@ -94,20 +101,30 @@ export class PostsService {
   }
 
   async update(
-    id: string,
-    updatePostDto: UpdatePostDto,
-  ): Promise<PostDocument> {
-    const { comentarios, ...allowedFields } = updatePostDto;
+  id: string,
+  updatePostDto: UpdatePostDto,
+): Promise<PostDocument> {
+  const { descripcion, fotos, etiquetas, comentarios } = updatePostDto;
+  const allowedFields: any = {};
+  if (descripcion !== undefined) allowedFields.descripcion = descripcion;
+  if (fotos !== undefined) allowedFields.fotos = fotos;
+  if (etiquetas !== undefined) allowedFields.etiquetas = etiquetas;
+  if (comentarios !== undefined) allowedFields.comentarios = comentarios;
 
-    const updatedPost = await this.postModel
-      .findByIdAndUpdate(new Types.ObjectId(id), allowedFields, { new: true })
-      .exec();
+  const updatedPost = await this.postModel
+    .findByIdAndUpdate(
+      new Types.ObjectId(id),
+      { $set: allowedFields },
+      { new: true, runValidators: true }
+    )
+    .exec();
 
-    if (!updatedPost) {
-      throw new NotFoundException(`Post with ID ${id} not found`);
-    }
-    return updatedPost;
-  }
+  if (!updatedPost) throw new NotFoundException(`Post with ID ${id} not found`);
+  return updatedPost;
+}
+
+
+
 
   async remove(id: string): Promise<PostDocument> {
     const deletedPost = await this.postModel
@@ -141,16 +158,16 @@ export class PostsService {
   }
 
   async findAllWithLikedFlag(userId: string): Promise<any[]> {
-  const posts = await this.postModel
-    .find()
-    .populate('usuario_id')
-    .lean(); // convierte a objetos JS puros
+    const posts = await this.postModel
+      .find()
+      .populate('usuario_id')
+      .lean(); // convierte a objetos JS puros
 
-  return posts.map((post) => ({
-    ...post,
-    liked: post.likes?.some((id) => id.toString() === userId),
-  }));
-}
+    return posts.map((post) => ({
+      ...post,
+      liked: post.likes?.some((id) => id.toString() === userId),
+    }));
+  }
 
   async getPostsPaginated(
     paginationParameters: PaginationParameters,
@@ -159,7 +176,6 @@ export class PostsService {
   }
 
   async countPosts(params?: PaginationParameters): Promise<number> {
-  return this.postsRepository.countPosts(params);
-}
-
+    return this.postsRepository.countPosts(params);
+  }
 }

@@ -13,12 +13,20 @@ import {
 } from "react-native";
 import padlock from "../assets/images/padlock.png";
 import CustomText from "../src/components/CustomText";
-import { validatePassword } from "../src/utils/helpers"; // Importa la validación
+import { validatePassword } from "../src/utils/helpers"; 
 import { useState } from "react";
 import { Input, Icon } from "react-native-elements";
 import { router } from "expo-router";
 import Header from "../src/components/Header";
 import Toast from "react-native-toast-message";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from "expo-constants";
+
+// Aquí definimos API_URL leyendo desde la configuración de Expo (app.json o app.config.js)
+const API_URL = 
+  Constants.expoConfig?.extra?.API_URL || 
+  Constants.manifest?.extra?.API_URL || 
+  "http://localhost:3000";
 
 export default function ChangePassword() {
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +69,7 @@ export default function ChangePassword() {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     let hasErrors = false;
     let newErrors = {};
 
@@ -86,18 +94,51 @@ export default function ChangePassword() {
       return;
     }
 
-    console.log("Contraseña guardada:", formData);
-    Toast.show({
-            type: "customToast",
-            text1: "Tu contraseña",
-            text2: "Ha sido cambiada correctamente",
-            visibilityTime: 3000,
-            position: "center",
-          });
-    
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const userId = await AsyncStorage.getItem("userId");
+
+      if (!token || !userId) {
+        Toast.show({ type: "error", text1: "Sesión no válida" });
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: formData.newPassword }),
+      });
+
+      if (response.ok) {
+        Toast.show({
+          type: "customToast",
+          text1: "Tu contraseña",
+          text2: "Ha sido cambiada correctamente",
+          visibilityTime: 3000,
+          position: "center",
+        });
+
         setTimeout(() => {
           router.push("/Home");
         }, 3000);
+      } else {
+        const errorData = await response.json();
+        Toast.show({
+          type: "error",
+          text1: "Error al cambiar contraseña",
+          text2: errorData.message || "Inténtalo de nuevo",
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error inesperado",
+        text2: error.message || "Inténtalo más tarde",
+      });
+    }
   };
 
   return (
