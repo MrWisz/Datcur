@@ -17,7 +17,6 @@ export class Comment {
 
   @Prop({ type: Types.ObjectId, default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
-
 }
 
 export const CommentSchema = SchemaFactory.createForClass(Comment);
@@ -50,3 +49,20 @@ export class Post {
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
+
+// ------ MIDDLEWARE DE PROTECCIÓN ANTI-STRINGS ------
+PostSchema.pre('findOneAndUpdate', function (next) {
+  const update: any = this.getUpdate();
+
+  if (update?.$set?.favoritos && Array.isArray(update.$set.favoritos)) {
+    update.$set.favoritos = update.$set.favoritos.map(id =>
+      typeof id === 'string' ? new Types.ObjectId(id) : id
+    );
+  }
+  if (update?.$set?.likes && Array.isArray(update.$set.likes)) {
+    update.$set.likes = update.$set.likes.map(id =>
+      typeof id === 'string' ? new Types.ObjectId(id) : id
+    );
+  }
+  next();
+});

@@ -38,17 +38,7 @@ export class UpdatePostDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  likes?: string[];
-
-  @IsOptional()
-  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ComentarioDto)
   comentarios?: ComentarioDto[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  favoritos?: string[];
 }

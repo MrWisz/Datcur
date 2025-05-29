@@ -10,32 +10,42 @@ export class FavoritesService {
   constructor(
   @InjectModel(Favorite.name) private favoriteModel: Model<Favorite>,
   @InjectModel(Post.name) private postModel: Model<Post> 
-) {}
+) {console.log(">>> FavoritesService INICIALIZADO");}
 
 
 async addFavorite(userId: string, postId: string): Promise<Favorite> {
+  // Convierte a ObjectId de la forma más segura posible
+  const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+  const postObjectId = Types.ObjectId.isValid(postId) ? new Types.ObjectId(postId) : postId;
+
+  // 🔥 LOGS PARA DEBUG FINAL
+  console.log('typeof userObjectId:', typeof userObjectId, userObjectId);
+  console.log('userObjectId instanceof Types.ObjectId:', userObjectId instanceof Types.ObjectId);
+  console.log('userObjectId constructor name:', userObjectId.constructor.name);
+
+  // El resto de tu método igual
   const existing = await this.favoriteModel.findOne({
-    userId: new Types.ObjectId(userId),
-    postId: new Types.ObjectId(postId),
+    userId: userObjectId,
+    postId: postObjectId,
   });
 
   if (existing) return existing;
 
   const favorite = new this.favoriteModel({
-    userId: new Types.ObjectId(userId),
-    postId: new Types.ObjectId(postId),
+    userId: userObjectId,
+    postId: postObjectId,
   });
 
   const savedFavorite = await favorite.save();
 
   await this.postModel.updateOne(
-    { _id: postId },
-    { $addToSet: { favoritos: userId } },
-    { bypassDocumentValidation: true }
+    { _id: postObjectId },
+    { $addToSet: { favoritos: userObjectId } }
   );
 
   return savedFavorite;
 }
+
 
   async removeFavorite(id: string): Promise<Favorite | null> {
   const favorite = await this.favoriteModel.findById(id).exec();
