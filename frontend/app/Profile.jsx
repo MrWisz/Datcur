@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Text,
   Alert,
+  Animated
 } from "react-native";
 import BottomNavigation from "../src/components/BottomNavigation";
 import Header from "../src/components/Header";
@@ -117,7 +118,7 @@ const Profile = () => {
         body: JSON.stringify({ userId: myId }),
       });
       if (res.ok) setIsFollowing(true);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Dejar de seguir usuario
@@ -136,7 +137,7 @@ const Profile = () => {
       });
       if (res.ok) setIsFollowing(false);
       setShowFollowOptions(false);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const confirmUnfollow = () => {
@@ -228,8 +229,10 @@ const Profile = () => {
             avatar={item.foto_perfil || "https://picsum.photos/seed/default/200"}
             username={item.username || item.nombre}
             fullName={item.nombre}
-            id={item._id}
+            userId={item._id}
+            onPressProfile={() => router.push(`/Profile?userId=${item._id}`)}
           />
+
         )}
       />
     );
@@ -248,8 +251,10 @@ const Profile = () => {
             avatar={item.foto_perfil || "https://picsum.photos/seed/default/200"}
             username={item.username || item.nombre}
             fullName={item.nombre}
-            id={item._id}
+            userId={item._id}
+            onPressProfile={() => router.push(`/Profile?userId=${item._id}`)}
           />
+
         )}
       />
     );
@@ -406,6 +411,7 @@ const styles = StyleSheet.create({
   rectangle: {
     backgroundColor: "rgba(255, 192, 0, 0.2)",
     width: "100%",
+    height: 400,
     paddingBottom: 20,
     paddingTop: 10,
     alignItems: "center",

@@ -15,8 +15,8 @@ const SearchBar = ({ value, onChangeText }) => {
         <TextInput
           style={styles.input}
           placeholder="Buscar"
-          value={value} // Se enlaza al estado del padre
-          onChangeText={onChangeText} // Llama a la función del padre
+          value={value} 
+          onChangeText={onChangeText} 
           placeholderTextColor="#888"
         />
         <TouchableOpacity style={styles.filterButton}>

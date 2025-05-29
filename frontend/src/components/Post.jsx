@@ -386,37 +386,55 @@ export default function Post({ post, isOwnProfile, onPostUpdated, onPostDeleted 
 
       {/* --- EDIT/DELETE ZONA --- */}
       {isEditing ? (
-        <>
+        <View style={{ marginTop: 8, width: "100%" }}>
           <TextInput
             value={editText}
             onChangeText={setEditText}
-            style={[styles.input, { marginTop: 8, width: "100%" }]}
+            style={styles.input}
             multiline
+            autoFocus
+            blurOnSubmit={false}
           />
           <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
-            <TouchableOpacity onPress={handleEdit} style={[styles.actionBtn, { backgroundColor: "#FFC000", borderRadius: 8, padding: 6 }]}>
+            <TouchableOpacity
+              onPress={handleEdit}
+              style={[styles.actionBtn, { backgroundColor: "#FFC000", borderRadius: 8, padding: 6 }]}
+            >
               <Text style={{ color: "#222" }}>Guardar</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setIsEditing(false); setEditText(post.descripcion); }} style={[styles.actionBtn, { backgroundColor: "#eee", borderRadius: 8, padding: 6 }]}>
+            <TouchableOpacity
+              onPress={() => {
+                setIsEditing(false);
+                setEditText(post.descripcion);
+              }}
+              style={[styles.actionBtn, { backgroundColor: "#eee", borderRadius: 8, padding: 6 }]}
+            >
               <Text>Cancelar</Text>
             </TouchableOpacity>
           </View>
-        </>
+        </View>
       ) : (
         <>
           <CustomText style={styles.description}>{post.descripcion}</CustomText>
           {showOptions && (
-            <View style={{
-              position: "absolute",
-              top: 45,
-              right: 10,
-              backgroundColor: "#fff",
-              borderRadius: 10,
-              padding: 10,
-              elevation: 6,
-              zIndex: 3
-            }}>
-              <TouchableOpacity onPress={() => { setIsEditing(true); setShowOptions(false); }}>
+            <View
+              style={{
+                position: "absolute",
+                top: 45,
+                right: 10,
+                backgroundColor: "#fff",
+                borderRadius: 10,
+                padding: 10,
+                elevation: 6,
+                zIndex: 3,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => {
+                  setShowOptions(false);
+                  setTimeout(() => setIsEditing(true), 50); // 🔧 permite que el modal se cierre primero
+                }}
+              >
                 <Text style={{ fontSize: 16 }}>Editar</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDelete}>
@@ -429,6 +447,7 @@ export default function Post({ post, isOwnProfile, onPostUpdated, onPostDeleted 
           )}
         </>
       )}
+
 
       {post.fotos && post.fotos[0] && (
         <Image source={{ uri: post.fotos[0] }} style={styles.postImage} />
@@ -536,13 +555,12 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "rgba(91, 212, 255, 0.25)",
-    height: 40,
-    width: 280,
-    borderRadius: 50,
-    margin: 5,
-    paddingLeft: "5%",
+    minHeight: 40,
+    borderRadius: 20,
+    paddingHorizontal: 12,
     fontFamily: "Comic-Bold",
     fontSize: 17,
+    width: "100%",
   },
 });
 

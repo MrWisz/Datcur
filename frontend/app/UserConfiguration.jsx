@@ -39,74 +39,111 @@ export default function UserConfiguration() {
     }
   };
 
- const handlePress = async () => {
-  try {
-    const token = await AsyncStorage.getItem("accessToken");
-    const userId = await AsyncStorage.getItem("userId");
+  const handlePress = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const userId = await AsyncStorage.getItem("userId");
 
-    if (!token || !userId) {
+      if (!token || !userId) {
+        Toast.show({
+          type: "error",
+          text1: "Falta información del usuario",
+        });
+        return;
+      }
+
+      const gustosArray = gustosText
+        .split("\n")
+        .map((g) => g.trim())
+        .filter((g) => g);
+
+      // Validar que gustos no esté vacío
+      if (gustosArray.length === 0) {
+        Toast.show({
+          type: "error",
+          text1: "Debes escribir al menos un gusto",
+        });
+        return;
+      }
+
+      // Solo requerir imagen si NO se está enviando solo gustos
+      if (!selectedImage) {
+        // Aquí se envían solo los gustos (sin imagen)
+        const response = await fetch(`${API_URL}/users/${userId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ gustos: gustosArray }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("❌ Backend error:", errorText);
+          throw new Error("Error al guardar la configuración");
+        }
+
+        Toast.show({
+          type: "customToast",
+          text1: "Éxito",
+          text2: "¡Tus gustos han sido guardados!",
+          visibilityTime: 3000,
+          position: "center",
+        });
+
+        setTimeout(() => {
+          router.push("/Home");
+        }, 3000);
+
+        return;
+      }
+
+      // Si hay imagen, se envía con FormData (imagen + gustos)
+      const formData = new FormData();
+      formData.append("file", {
+        uri: selectedImage,
+        name: "profile.jpg",
+        type: "image/jpeg",
+      });
+      formData.append("gustos", JSON.stringify(gustosArray));
+
+      const response = await fetch(`${API_URL}/users/${userId}/configure`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // No poner Content-Type para que RN lo maneje automáticamente
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Backend error:", errorText);
+        throw new Error("Error al guardar la configuración");
+      }
+
+      Toast.show({
+        type: "customToast",
+        text1: "Éxito",
+        text2: "¡Tu información ha sido guardada!",
+        visibilityTime: 3000,
+        position: "center",
+      });
+
+      setTimeout(() => {
+        router.push("/Home");
+      }, 3000);
+
+    } catch (err) {
+      console.error("(NOBRIDGE) ERROR", err);
       Toast.show({
         type: "error",
-        text1: "Falta información del usuario",
+        text1: "Error al guardar la configuración",
       });
-      return;
     }
+  };
 
-    if (!selectedImage) {
-      Toast.show({
-        type: "error",
-        text1: "Debes seleccionar una imagen",
-      });
-      return;
-    }
-
-    const gustosArray = gustosText
-      .split("\n")
-      .map((g) => g.trim())
-      .filter((g) => g);
-
-    const formData = new FormData();
-    formData.append("file", {
-      uri: selectedImage,
-      name: "profile.jpg",
-      type: "image/jpeg",
-    });
-    formData.append("gustos", JSON.stringify(gustosArray));
-
-    const response = await fetch(`${API_URL}/users/${userId}/configure`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ Backend error:", errorText);
-      throw new Error("Error al guardar la configuración");
-    }
-
-    Toast.show({
-      type: "customToast",
-      text1: "Éxito",
-      text2: "¡Tu información ha sido guardada!",
-      visibilityTime: 3000,
-      position: "center",
-    });
-
-    setTimeout(() => {
-      router.push("/Home");
-    }, 3000);
-  } catch (err) {
-    console.error("(NOBRIDGE) ERROR", err);
-    Toast.show({
-      type: "error",
-      text1: "Error al guardar la configuración",
-    });
-  }
-};
 
   return (
     <KeyboardAvoidingView
@@ -129,16 +166,18 @@ export default function UserConfiguration() {
                 style={styles.img}
               />
             </TouchableOpacity>
-            <CustomText style={{ textAlign: "center" }}>
+            <CustomText style={{ textAlign: "center", marginTop: 5 }}>
               Añade una foto de perfil
             </CustomText>
-            <TextInput
-              style={styles.input}
-              placeholder="Escribe aquí tus gustos (uno por línea)"
-              multiline={true}
-              value={gustosText}
-              onChangeText={setGustosText}
-            />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Escribe aquí tus gustos (uno por línea)"
+                multiline={true}
+                value={gustosText}
+                onChangeText={setGustosText}
+              />
+            </View>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.button} onPress={handlePress}>
                 <CustomText style={[styles.buttonText, { fontSize: 15 }]}>
@@ -178,15 +217,20 @@ const styles = StyleSheet.create({
     height: 100,
     alignSelf: "center",
   },
+  inputContainer: {
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
   input: {
     height: 150,
-    width: 300,
-    margin: 25,
-    marginTop: "10%",
+    width: '100%',
     backgroundColor: "rgba(91, 212, 255, 0.25)",
     paddingLeft: "5%",
     paddingTop: "5%",
     textAlignVertical: "top",
+    borderRadius: 10,
   },
   buttonContainer: {
     flexDirection: "row",
