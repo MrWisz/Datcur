@@ -70,6 +70,8 @@ export default function Login() {
     return;
   }
 
+  console.log(API_URL);
+
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",

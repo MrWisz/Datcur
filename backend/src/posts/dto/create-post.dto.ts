@@ -28,6 +28,7 @@ export class CreatePostDto {
   @IsString({ each: true })
   fotos: string[];
 
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   etiquetas: string[];

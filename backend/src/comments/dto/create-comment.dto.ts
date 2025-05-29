@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateCommentDto {
-  @IsNotEmpty()
+  /*@IsNotEmpty()
   @IsString()
-  userId: string;
+  userId: string;*/
 
   @IsNotEmpty()
   @IsString()

@@ -7,6 +7,7 @@ import {
   Get,
   Put,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -19,8 +20,9 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  async add(@Body() dto: CreateCommentDto) {
-    return this.commentsService.addComment(dto.userId, dto.postId, dto.content);
+  async add(@Body() dto: CreateCommentDto, @Req() req: any) {
+    const userId = req.user.userId;
+    return this.commentsService.addComment(userId, dto.postId, dto.content);
   }
 
   @Delete(':id')
@@ -37,4 +39,15 @@ export class CommentsController {
   async findByPost(@Param('postId') postId: string) {
     return this.commentsService.findByPostId(postId);
   }
+
+  /*//maneja los comentarios
+  @Post(':id/comments')
+  async addComment(
+    @Param('id') id: string,
+    @Body() body: { comentario: string },
+    @Req() req: Request,
+  ): Promise<PostDocument> {
+    await this.postsService.addComment(id, { comentario: body.comentario });
+    return this.postsService.findOne(id);
+} */
 }

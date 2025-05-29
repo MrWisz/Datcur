@@ -95,10 +95,7 @@ export class PostsService {
   // cambiando el findOne para que funcione el Post Individual
 
   async findOne(id: string): Promise<PostDocument> {
-    const post = await this.postModel
-      .findById(new Types.ObjectId(id))
-      .populate('usuario_id', 'nombre username foto_perfil') 
-      .exec();
+    const post = await this.postModel.findById(id).exec();
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -131,27 +128,6 @@ export class PostsService {
     return deletedPost;
   }
 
-  async addComment(
-    id: string,
-    comment: { usuario_id: string; comentario: string; fecha_comentario: Date },
-  ): Promise<PostDocument> {
-    const post = await this.findOne(id);
-    post.comentarios.push({
-      ...comment,
-      usuario_id: new Types.ObjectId(comment.usuario_id),
-      _id: new Types.ObjectId(),
-    });
-    return post.save();
-  }
-
-  async removeComment(id: string, commentId: string): Promise<PostDocument> {
-    const post = await this.findOne(id);
-    post.comentarios = post.comentarios.filter(
-      (comment) => !comment._id.equals(new Types.ObjectId(commentId)),
-    );
-    return post.save();
-  }
-
   async findAllWithLikedFlag(userId: string): Promise<any[]> {
     const posts = await this.postModel.find().populate('usuario_id').lean(); // convierte a objetos JS puros
 
@@ -169,5 +145,20 @@ export class PostsService {
 
   async countPosts(params?: PaginationParameters): Promise<number> {
     return this.postsRepository.countPosts(params);
+  }
+
+  async findOneWithComments(id: string): Promise<PostDocument> {
+    const post = await this.postModel
+      .findById(id)
+      .populate('usuario_id')
+      .populate({
+        path: 'comentarios',
+        populate: { path: 'usuario_id', select: 'nombre username foto_perfil' },
+      })
+      .exec();
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+    return post;
   }
 }

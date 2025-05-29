@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -14,6 +15,9 @@ import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Feather";
 import Post from "../src/components/Post";
+import { useRef } from "react";
+import Toast from "react-native-toast-message";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
 export default function PostIndividual() {
   const { postId } = useLocalSearchParams();
@@ -21,6 +25,23 @@ export default function PostIndividual() {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
   const API_URL = Constants.expoConfig.extra.API_URL;
+  const commentInputRef = useRef(null);
+  const scrollViewRef = useRef(null);
+
+  const fetchComments = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      const res = await fetch(`${API_URL}/comments/post/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      setComments(data); 
+    } catch (error) {
+      console.error("Error al obtener comentarios:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -33,7 +54,7 @@ export default function PostIndividual() {
         });
         const data = await res.json();
         setPost(data);
-        setComments(data.comentarios || []);
+        fetchComments(); 
       } catch (error) {
         console.error(error);
       }
@@ -45,29 +66,50 @@ export default function PostIndividual() {
     if (!commentText.trim()) return;
     try {
       const token = await AsyncStorage.getItem("accessToken");
-      const res = await fetch(`${API_URL}/posts/${postId}/comments`, {
+      if (!token) {
+        Toast.show({ type: "error", text1: "No hay token de sesión" });
+        return;
+      }
+      const res = await fetch(`${API_URL}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ comentario: commentText }),
+        body: JSON.stringify({ postId, content: commentText }),
       });
-      if (!res.ok) throw new Error("Error al comentar");
-      const updatedPost = await res.json();
-      setComments(updatedPost.comentarios || []);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Respuesta del backend:", data);
+        Toast.show({
+          type: "error",
+          text1: "Error al comentar",
+          text2: data?.message || "Intenta de nuevo",
+        });
+        return;
+      }
+
       setCommentText("");
-    Toast.show({
-      type: "customToast",
-      text1: "Exito",
-      text2: "Enviado",
-      visibilityTime: 3000,
-    }); 
+      fetchComments(); // <-- Vuelve a cargar los comentarios
+      Toast.show({
+        type: "customToast",
+        text1: "Éxito",
+        text2: "Comentario enviado",
+        visibilityTime: 3000,
+      });
     } catch (error) {
-      console.error(error);
-     //Toast de error 
+      console.error("Error al comentar:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error inesperado",
+        text2: error.message,
+      });
     }
   };
+
+
     // Simulación local:
     /*setComments((prev) => [...prev, { comentario: commentText }]);
     setCommentText("");*/
@@ -76,50 +118,31 @@ export default function PostIndividual() {
   if (!post) return <Text>Cargando...</Text>;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0} // Ajusta según tu header
+    >
       <Header />
-      <ScrollView style={styles.contentArea}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <Image
-              source={{ uri: post.usuario_id?.foto_perfil }}
-              style={styles.avatar}
-            />
-            <Text style={styles.username}>
-              {post.usuario_id?.nombre || "Usuario"}
-            </Text>
-            <Text style={styles.date}>
-              {post.fecha_creacion
-                ? new Date(post.fecha_creacion).toLocaleDateString("es-MX", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : ""}
-            </Text>
-          </View>
-          <Text style={styles.description}>{post.descripcion}</Text>
-          {post.fotos && post.fotos[0] && (
-            <Image source={{ uri: post.fotos[0] }} style={styles.postImage} />
-          )}
-        </View>
+      <ScrollView
+        style={styles.contentArea}
+        ref={scrollViewRef}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Post
+          post={post}
+          onCommentIconPress={() => {
+            commentInputRef.current?.focus();
+            setTimeout(() => {
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }, 300);
+          }}
+        />
         <View style={styles.commentsSection}>
-          <Text style={{ fontWeight: "bold", marginBottom: 8 }}>
-            Comentarios:
-          </Text>
-          {comments.length > 0 ? (
-            comments.map((c, idx) => (
-              <Text key={idx} style={{ marginVertical: 2 }}>
-                {c.comentario}
-              </Text>
-            ))
-          ) : (
-            <Text style={{ color: "#888" }}>Sin comentarios</Text>
-          )}
+          {/* ...comentarios... */}
           <View style={styles.commentBox}>
             <TextInput
+              ref={commentInputRef}
               style={styles.input}
               placeholder="Escribe un comentario..."
               value={commentText}
@@ -132,11 +155,23 @@ export default function PostIndividual() {
         </View>
       </ScrollView>
       <BottomNavigation />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#eee",
+  },
+  contentArea: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  scrollView: {
+    flex: 1,
+    paddingBottom: 10,
+  },
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,

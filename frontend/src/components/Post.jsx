@@ -270,7 +270,7 @@ export default function Post({ post, onCommentIconPress = null }) {
   };
 
   //post individual
-  const postInd = () => {
+  const goToPostIndividual = () => {
     if (post._id) {
       router.push(`/PostIndividual?postId=${post._id}`);
     } else {
@@ -314,7 +314,7 @@ export default function Post({ post, onCommentIconPress = null }) {
         <TouchableOpacity
           onPress={
             onCommentIconPress
-              ? () => postInd(post)
+              ? () => onCommentIconPress(post)
               : goToPostIndividual
           }
           style={styles?.actionBtn}
